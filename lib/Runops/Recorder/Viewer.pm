@@ -49,15 +49,21 @@ sub _enter_file {
     
     close $self->current_file if $self->current_file;
     $self->{current_file_path} = $self->files->[$file_id];
-    open my $file, "<", $self->current_file_path or die $!;
-    $self->{current_file} = $file;
-    my @lines = <$file>;
-    $self->{all_lines} = \@lines;
-    $self->{num_lines} = @lines;
-
     $screen->clrscr();
     $screen->at(0, 0);
-    $screen->bold->puts($self->current_file_path)->normal();
+    if (-e $self->current_file_path) {
+        open my $file, "<", $self->current_file_path or die $!;
+        $self->{current_file} = $file;
+        my @lines = <$file>;
+        $self->{all_lines} = \@lines;
+        $self->{num_lines} = @lines;
+
+        $screen->bold->puts($self->current_file_path)->normal();
+    }
+    else {
+        $self->{current_file} = undef;
+        $screen->bold->puts("Can't find file\n")->normal();        
+    }
     
     1;
 }
@@ -69,6 +75,8 @@ sub _enter_line {
     my ($line_no) = unpack("L", $buff);
     
     $line_no--;
+    
+    return unless $self->current_file;
     
     my $screen_cols = $screen->cols;
     
