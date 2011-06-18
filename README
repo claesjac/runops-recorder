@@ -1,0 +1,34 @@
+NAME
+    Runops::Recorder - Runops replacement which saves what is being
+    performed
+
+SYNOPSIS
+      # will save to a runops-recorder.data file in the current directory
+      perl -MRunops::Recorder <program>
+
+      # and then to view the recording
+      rr-viewer runops-recorder.data
+
+DESCRIPTION
+    Runops::Recorder is an alternative runops which saves what it does into
+    a file that can later be viewed using the rr-viewer tool.
+
+VIEWING THE RECORDING
+    Use the 'rr-viewer' tool. It just takes the path with the recording as
+    an argument. Press 'q' to quit or any other key to step to the next
+    event.
+
+TODO
+    Record more things such as changes to variables, opened file descriptors
+    etc.
+
+AUTHOR
+    Claes Jakobsson, <claesjac@cpan.org>
+
+COPYRIGHT AND LICENSE
+    Copyright (C) 2011 by Claes Jakobsson
+
+    This library is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself, either Perl version 5.10.0 or, at
+    your option, any later version of Perl 5 you may have available.
+

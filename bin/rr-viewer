@@ -1,0 +1,10 @@
+#!/usr/bin/perl
+
+use Runops::Recorder::Viewer;
+
+unless (@ARGV) {
+    print "Usage: rr-viewer <file>\n";
+    exit -1;
+}
+
+Runops::Recorder::Viewer->view(shift);
