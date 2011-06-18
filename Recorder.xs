@@ -6,6 +6,11 @@
 
 #include "const-c.inc"
 
+/* Doesn't seem to exist before 5.14 */
+#ifndef OP_CLASS
+#define OP_CLASS(o) (PL_opargs[(o)->op_type] & OA_CLASS_MASK)
+#endif
+
 typedef enum {
     EVENT_SAW_FILE = 1,
     EVENT_ENTER_FILE,
