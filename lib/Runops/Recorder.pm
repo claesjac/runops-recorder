@@ -71,7 +71,8 @@ that can later be viewed using the rr-viewer tool.
 
 Use the 'rr-viewer' tool. It just takes the path with the recording as an argument. 
 Press 'q' to quit or any other key to step to the next event. Press 's' to skip any 
-events in the current file until end of recording.
+events in the current file until end of recording. Press 'a' to toggle wether we should 
+skip whatever is in @INC when the recorder what loaded.
 
 =head1 TODO
 

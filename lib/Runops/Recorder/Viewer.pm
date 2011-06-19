@@ -20,7 +20,9 @@ my %EVENT = (
 my $screen = Term::Screen->new();
 $screen->clrscr();
 
-for my $accessor (qw(io files current_file_path current_file all_lines num_lines skip_files last_line)) { 
+for my $accessor (qw(
+    io files current_file_path current_file all_lines
+    num_lines skip_files last_line skip_installed)) { 
     no strict 'refs'; 
     *{$accessor} = sub { $_[0]->{$accessor}; };
 }
@@ -34,6 +36,7 @@ sub new {
         files => [], 
         skip_files => {},
         last_line => 0,
+        skip_installed => 0,
     }, $pkg;
 
     return $self;
@@ -77,6 +80,9 @@ sub _enter_file {
     1;
 }
 
+my $site_libs = join "|", grep { /^\// } @INC;
+my $site_qr = qr{$site_libs};
+
 sub _enter_line {
     my $self = shift;
 
@@ -87,8 +93,8 @@ sub _enter_line {
 
     $self->{last_line} = $line_no;
     return unless $self->current_file;
-    
     return if $self->skip_files->{$self->current_file_path};
+    return if $self->skip_installed && $self->current_file_path =~ $site_qr;
     
     my $screen_cols = $screen->cols;
     my $screen_rows = int(($screen->rows - 4) / 2);
@@ -125,6 +131,7 @@ my %KEY_HANDLER = (
         my $self = shift; 
         $self->skip_files->{$self->current_file_path} = 1; 
     },
+    a => sub { shift->{skip_installed} |= 1 },
 );
 
 sub _process_key {
