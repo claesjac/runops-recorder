@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Term::Screen;
+use Time::HiRes qw(sleep);
 
 use constant EVENT_SAW_FILE => "\x01";
 use constant EVENT_ENTER_FILE => "\x02";
@@ -36,7 +37,7 @@ sub new {
         files => [], 
         skip_files => {},
         last_line => 0,
-        skip_installed => 0,
+        skip_installed => $ENV{RR_SKIP_INC} // 0,
     }, $pkg;
 
     return $self;
@@ -158,12 +159,21 @@ my %KEY_HANDLER = (
         my $self = shift; 
         $self->skip_files->{$self->current_file_path} = 1; 
     },
-    a => sub { shift->{skip_installed} |= 1 },
+    a => sub { 
+        $_[0]->{skip_installed} ^= 1;
+        $screen->at(1, 0)->puts("Skip installed is: " . ((qw(OFF ON)[$_[0]->skip_installed])));
+        $screen->getch();
+    },
     h => \&_show_help,
 );
 
 sub _process_key {
     my $self = shift;
+    
+    if ($ENV{RR_AUTORUN}) {
+        sleep $ENV{RR_AUTORUN};
+        return;
+    }
     
     my $k = lc $screen->getch();
     $screen->at(1, 0);
@@ -196,10 +206,16 @@ sub playback {
     while (defined(my $event = $self->io->getc)) {
         $EVENT{$event}->($self);
     }
+    
+    $self->done;
 }
 
 sub done {
-    $screen->clrscr();
+    $screen->at(0, 0)->clreol();
+    $screen->at(0, 0)->puts("Playback completed, press the ANY key to quit...");
+  
+    $screen->getch();
+    
     exit 0;
 }
 
