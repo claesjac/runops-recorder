@@ -3,7 +3,9 @@ Revision history for Perl extension Runops::Recorder.
 0.03  Sun Jun 19
     - Adjust number of lines shown to fill the screen if possible
     - Added help page 'h'
-    
+    - Viewer now support RR_AUTORUN and RR_SKIP_INC environment variables
+      which sets how fast it should autorun and if it should skip @INC
+      
 0.02  Sun Jun 19 11:53 2011
     - Added possibility to skip viewing of a the current file with 's'
     - Viewer adapts to the number of lines your terminal
