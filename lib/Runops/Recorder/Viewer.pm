@@ -18,7 +18,7 @@ my %EVENT = (
 my $screen = Term::Screen->new();
 $screen->clrscr();
 
-for my $accessor (qw(io files current_file_path current_file all_lines num_lines)) { 
+for my $accessor (qw(io files current_file_path current_file all_lines num_lines skip_files)) { 
     no strict 'refs'; 
     *{$accessor} = sub { $_[0]->{$accessor}; };
 }
@@ -27,7 +27,7 @@ sub new {
     my ($pkg, $path) = @_;
     
     open my $in, "<", $path or die $!;
-    my $self = bless { io => $in, files => [] }, $pkg;
+    my $self = bless { io => $in, files => [], skip_files => {} }, $pkg;
 
     return $self;
 }
@@ -75,8 +75,9 @@ sub _enter_line {
     my ($line_no) = unpack("L", $buff);
     
     $line_no--;
-    
+
     return unless $self->current_file;
+    return if $self->skip_files->{$self->current_file};
     
     my $screen_cols = $screen->cols;
     
@@ -96,8 +97,24 @@ sub _enter_line {
         $screen->normal if $l == $line_no;
     }
 
-    my $chr = $screen->getch();
-    if ($chr eq 'q') { $self->done; }
+    $self->_process_key();
+}
+
+my %KEY_HANDLER = (
+    q => sub { shift->done },
+    s => sub { my $self = shift; $self->skip_files->{$self->current_file} = 1; },
+);
+
+sub _process_key {
+    my $self = shift;
+    
+    my $k = lc $screen->getch();
+    $screen->at(1, 0);
+
+    my $handler = $KEY_HANDLER{$k} // sub {};
+    $handler->($self);
+    
+    1;
 }
 
 sub playback {

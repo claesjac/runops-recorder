@@ -70,7 +70,8 @@ that can later be viewed using the rr-viewer tool.
 =head1 VIEWING THE RECORDING
 
 Use the 'rr-viewer' tool. It just takes the path with the recording as an argument. 
-Press 'q' to quit or any other key to step to the next event.
+Press 'q' to quit or any other key to step to the next event. Press 's' to skip any 
+events in the current file until end of recording.
 
 =head1 TODO
 
