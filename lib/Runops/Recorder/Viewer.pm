@@ -122,6 +122,7 @@ sub _enter_file {
         my $i = 0;
         for my $l ($from..$to) {    
             last if $l > $self->num_lines;
+            last unless defined $self->all_lines->[$l];
             $screen->at(2 + $i++, 0);
             $screen->reverse if $l == $line_no;
             my $src = sprintf("% ${p}d: %s", $l, substr($self->all_lines->[$l], 0, $screen_cols - ($p + 2)));
