@@ -15,6 +15,7 @@ typedef enum {
     EVENT_SAW_FILE = 1,
     EVENT_ENTER_FILE,
     EVENT_ENTER_LINE,
+    EVENT_DIE,
 } Event_type;
 
 typedef enum Event Event;
@@ -71,6 +72,10 @@ void record_cop(COP *cop) {
     }
 }
 
+void record_exception() {
+    PerlIO_putc(recording, EVENT_DIE);    
+}
+
 int runops_recorder(pTHX) {
     dVAR;
     register OP *op = PL_op;
@@ -78,6 +83,11 @@ int runops_recorder(pTHX) {
     while (PL_op) {
         if (OP_CLASS(PL_op) == OA_COP) {
             record_cop(cCOPx(PL_op));
+        }
+        switch (PL_op->op_type) {
+            case OP_DIE:
+                record_exception(PL_op);
+                break;
         }
 
         PL_op = CALL_FPTR(PL_op->op_ppaddr)(aTHX);    

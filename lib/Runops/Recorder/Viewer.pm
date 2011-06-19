@@ -8,17 +8,19 @@ use Term::Screen;
 use constant EVENT_SAW_FILE => "\x01";
 use constant EVENT_ENTER_FILE => "\x02";
 use constant EVENT_ENTER_LINE => "\x03";
+use constant EVENT_DIE => "\x04";
 
 my %EVENT = (
     EVENT_SAW_FILE()    => \&_saw_file,
     EVENT_ENTER_FILE()  => \&_enter_file,
     EVENT_ENTER_LINE()  => \&_enter_line,
+    EVENT_DIE()  => \&_throw_exception,
 );
 
 my $screen = Term::Screen->new();
 $screen->clrscr();
 
-for my $accessor (qw(io files current_file_path current_file all_lines num_lines skip_files)) { 
+for my $accessor (qw(io files current_file_path current_file all_lines num_lines skip_files last_line)) { 
     no strict 'refs'; 
     *{$accessor} = sub { $_[0]->{$accessor}; };
 }
@@ -27,7 +29,12 @@ sub new {
     my ($pkg, $path) = @_;
     
     open my $in, "<", $path or die $!;
-    my $self = bless { io => $in, files => [], skip_files => {} }, $pkg;
+    my $self = bless { 
+        io => $in, 
+        files => [], 
+        skip_files => {},
+        last_line => 0,
+    }, $pkg;
 
     return $self;
 }
@@ -78,6 +85,7 @@ sub _enter_line {
     my ($line_no) = unpack("L", $buff);    
     $line_no--;
 
+    $self->{last_line} = $line_no;
     return unless $self->current_file;
     
     return if $self->skip_files->{$self->current_file_path};
@@ -102,6 +110,13 @@ sub _enter_line {
     }
 
     $self->_process_key();
+}
+
+sub _throw_exception {
+    my $self = shift;
+
+    $screen->at(1, 0);
+    $screen->puts("Threw exception at " . $self->last_line . " in " . $self->current_file_path);
 }
 
 my %KEY_HANDLER = (

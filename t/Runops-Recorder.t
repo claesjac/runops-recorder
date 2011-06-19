@@ -15,6 +15,12 @@ BEGIN { use_ok('Runops::Recorder') };
 
 sub foo {
     1;
+    
+    die "foo";
 }
 
-foo();
+eval {
+    foo();
+};
+
+print "1";
