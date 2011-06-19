@@ -2,6 +2,7 @@ Revision history for Perl extension Runops::Recorder.
 
 0.02  Sun Jun 19 
     - Added possibility to skip viewing of a the current file with 's'
+    - Viewer adapts to the number of lines your terminal
     
 0.01  Sat Jun 18 16:07:57 2011
 	- original version; created by h2xs 1.23 with options

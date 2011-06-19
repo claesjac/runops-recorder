@@ -80,9 +80,10 @@ sub _enter_line {
     return if $self->skip_files->{$self->current_file};
     
     my $screen_cols = $screen->cols;
+    my $screen_rows = int(($screen->rows - 4) / 2);
     
-    my $from = $line_no > 10 ? $line_no - 10 : 0;
-    my $to = $line_no + 10 < $self->num_lines - 1 ? $line_no + 10 : $self->num_lines - 1;
+    my $from = $line_no > $screen_rows ? $line_no - $screen_rows : 0;
+    my $to = $line_no + $screen_rows < $self->num_lines - 1 ? $line_no + $screen_rows : $self->num_lines - 1;
     
     $screen->at(2, 0);
     $screen->clreos();
