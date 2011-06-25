@@ -13,9 +13,13 @@ fail "Failed to generate test data" if $? or !-e "test-recording/main.data";
 my $reader = Runops::Recorder::Reader->new("test-recording");
 
 my ($cmd, $data) = $reader->read_next();
+is($cmd, 0);
+is($data, "\0\0\0\0");
+
+($cmd, $data) = $reader->read_next();
 is($cmd, 1);
-is($data, "\1\0\0\0");
-is ($reader->get_file(1), "t/data/example.pl");
+is($data, "\2\0\0\0");
+is($reader->get_identifier(2), "t/data/example.pl");
 
 ($cmd, $data) = $reader->read_next();
 is($cmd, 2);
@@ -26,5 +30,12 @@ $reader->skip_until(1);
 
 ($cmd, $data) = $reader->read_next();
 is($cmd, 1);
-is($data, "\2\0\0\0");
-like ($reader->get_file(2), qr/strict\.pm$/);
+is($data, "\4\0\0\0");
+like ($reader->get_identifier(4), qr/strict\.pm$/);
+
+# Skip until next entersub
+$reader->skip_until(4);
+($cmd, $data) = $reader->read_next();
+is($cmd, 4);
+is($data, "\3\0\0\0");
+is($reader->get_identifier(3), "import");

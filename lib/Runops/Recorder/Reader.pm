@@ -6,7 +6,7 @@ use warnings;
 use Fcntl qw(SEEK_CUR SEEK_END SEEK_SET);
 use File::Spec;
 
-use accessors::ro qw(files_fh data_fh files handler);
+use accessors::ro qw(identifiers_fh data_fh identifiers handler);
 
 sub new {
     my ($pkg, $dir, $opts) = @_;
@@ -14,7 +14,7 @@ sub new {
     $opts //= {};
     
     open my $data_fh, "<", File::Spec->catfile($dir, "main.data") or die $!;
-    open my $files_fh, "<", File::Spec->catfile($dir, "main.files") or die $!;
+    open my $identifiers_fh, "<", File::Spec->catfile($dir, "main.identifiers") or die $!;
     
     my $handler;
     if ($opts->{handler}) {
@@ -26,13 +26,13 @@ sub new {
     
     my $self = bless { 
         data_fh => $data_fh, 
-        files_fh => $files_fh,
-        files => {},
+        identifiers_fh => $identifiers_fh,
+        identifiers => {},
         handler => $handler,
     }, $pkg;
 
     $self->find_next_keyframe;
-    $self->read_files;
+    $self->read_identifiers;
     
     return $self;
 }
@@ -42,12 +42,16 @@ sub new {
         0 => 'on_keyframe',
         1 => 'on_switch_file',
         2 => 'on_next_line',
+        3 => 'on_die',
+        4 => 'on_enter_sub',
     );
     
     my %CMD_DATA_TRANSFORMER = (
         0 => sub { return (0) },
-        1 => sub { my ($file_no) = unpack("L", $_[0]); return ($file_no, $_[1]->get_file($file_no)) },
+        1 => sub { my ($file_no) = unpack("L", $_[0]); return ($file_no, $_[1]->get_identifier($file_no)) },
         2 => sub { my ($line_no) = unpack("L", $_[0]); return ($line_no) },
+        3 => sub { my ($line_no) = unpack("L", $_[0]); return ($line_no) },
+        4 => sub { my ($identifier_no) = unpack("L", $_[0]); return ($identifier_no, $_[1]->get_identifier($identifier_no)) },
     );
     
     sub _make_class_handler {
@@ -78,24 +82,24 @@ sub new {
     }
 }
 
-sub read_files {
+sub read_identifiers {
     my $self = shift;
     
-    my $files_fh = $self->files_fh;
+    my $identifiers_fh = $self->identifiers_fh;
     
     # Reset that we're not at EOF
-    $files_fh->seek(0, SEEK_CUR);
-    while (<$files_fh>) {
+    $identifiers_fh->seek(0, SEEK_CUR);
+    while (<$identifiers_fh>) {
         chomp;
         my ($id, $name) = split /:/, $_, 2;
-        $self->{files}->{$id} = $name;
+        $self->{identifiers}->{$id} = $name;
     }
 }
 
-sub get_file {
+sub get_identifier {
     my ($self, $id) = @_;
-    $self->read_files();
-    return $self->files->{$id};
+    $self->read_identifiers();
+    return $self->identifiers->{$id};
 }
 
 sub read_next {
@@ -130,6 +134,7 @@ sub skip_until {
     my ($cmd, $data);
     do {
         ($cmd, $data) = $self->read_next();
+        return unless defined $cmd;
     }
     until ($cmd == $target_cmd);
 

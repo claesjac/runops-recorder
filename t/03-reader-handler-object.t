@@ -30,11 +30,23 @@ sub on_next_line {
     $next_lines++;
 }
 
+my $enter_subs;
+my %seen_subs;
+sub on_enter_sub {
+    my (undef, $id, $name) = @_;
+    $seen_subs{$id} = $name;
+    $enter_subs++;
+}
+
 my $reader = Runops::Recorder::Reader->new("test-recording", { handler => __PACKAGE__ });
 $reader->read_all;
 
 is($keyframes, 1);
 is($switched_files, 5);
-is($seen_file{1}, 't/data/example.pl');
+is($seen_file{2}, 't/data/example.pl');
 is(scalar keys %seen_file, 3),
-is($next_lines, 11);
+is($next_lines, 13);
+is($enter_subs, 3);
+is($seen_subs{3}, 'import');
+is($seen_subs{6}, 'foo');
+is(scalar keys %seen_subs, 2),
