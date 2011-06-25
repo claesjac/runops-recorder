@@ -18,7 +18,10 @@ sub on_keyframe {
 }
 
 my $switched_files;
+my %seen_file;
 sub on_switch_file {
+    my (undef, $id, $path) = @_;
+    $seen_file{$id} = $path;
     $switched_files++;
 }
 
@@ -32,4 +35,6 @@ $reader->read;
 
 is($keyframes, 1);
 is($switched_files, 5);
+is($seen_file{1}, 't/data/example.pl');
+is(scalar keys %seen_file, 3),
 is($next_lines, 11);

@@ -11,7 +11,6 @@
 
 typedef enum {
     EVENT_KEYFRAME = 0,
-    EVENT_SAW_FILE,
     EVENT_ENTER_FILE,
     EVENT_ENTER_LINE,
     EVENT_DIE,
@@ -30,7 +29,6 @@ static const char* base_dir;
 static size_t base_dir_len;
 
 static const char *prev_cop_file = NULL;
-static line_t prev_cop_line = -1;
 
 static uint32_t curr_file_id = 0;
 static uint32_t next_file_id = 1;
@@ -73,8 +71,9 @@ void open_recording_files() {
     
     const char *fn = create_path(is_initial_recorder == TRUE ? "main.data" : Perl_form("%d.data", pid));
     data_io = PerlIO_open(fn, "w");
+    PerlIO_write(data_io, KEYFRAME_DATA, 5);
     Safefree(fn);
-
+    
     fn = create_path(is_initial_recorder == TRUE ? "main.files" : Perl_form("%d.files", pid));
     files_io = PerlIO_open(fn, "w");
     Safefree(fn);
@@ -86,9 +85,7 @@ static void record_switch_file(const char *cop_file) {
     if (!hv_exists(seen_file, cop_file, len)) {
         curr_file_id = next_file_id++;
         hv_store(seen_file, cop_file, len, newSViv(curr_file_id), 0);
-        PerlIO_write(files_io, &curr_file_id, sizeof(uint32_t));
-        PerlIO_write(files_io, &len, sizeof(short));
-        PerlIO_write(files_io, cop_file, len);        
+        PerlIO_printf(files_io, "%d:%s\n", curr_file_id, cop_file);
     }
     else {
         SV** sv = hv_fetch(seen_file, cop_file, len, 0);
@@ -98,9 +95,7 @@ static void record_switch_file(const char *cop_file) {
     }
     
     prev_cop_file = cop_file;
-    prev_cop_line = -1;
     
-    PerlIO_write(data_io, KEYFRAME_DATA, 5);
     PerlIO_putc(data_io, EVENT_ENTER_FILE);
     PerlIO_write(data_io, &curr_file_id, sizeof(uint32_t));            
 }
@@ -113,13 +108,10 @@ static void record_COP(COP *cop) {
         record_switch_file(cop_file);
     }    
     
-    if (cop_line != prev_cop_line) {
-        PerlIO_putc(data_io, EVENT_ENTER_LINE);    
-        PerlIO_write(data_io, &cop_line, sizeof(uint32_t));
-        prev_cop_line = cop_line;
+    PerlIO_putc(data_io, EVENT_ENTER_LINE);    
+    PerlIO_write(data_io, &cop_line, sizeof(uint32_t));
         
-        check_and_insert_keyframe();
-    }
+    check_and_insert_keyframe();
 }
 
 int runops_recorder(pTHX) {
