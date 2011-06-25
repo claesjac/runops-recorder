@@ -117,7 +117,7 @@ sub read_next {
     return;
 }
 
-sub read {
+sub read_all {
     my $self = shift;
     while ($self->read_next()) {
         # nop

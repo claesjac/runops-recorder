@@ -3,26 +3,17 @@ package Runops::Recorder::Viewer;
 use strict;
 use warnings;
 
+use Runops::Recorder::Reader;
+
+use Scalar::Util qw(weaken);
 use Term::Screen;
 use Time::HiRes qw(sleep);
-
-use constant EVENT_SAW_FILE => "\x01";
-use constant EVENT_ENTER_FILE => "\x02";
-use constant EVENT_ENTER_LINE => "\x03";
-use constant EVENT_DIE => "\x04";
-
-my %EVENT = (
-    EVENT_SAW_FILE()    => \&_saw_file,
-    EVENT_ENTER_FILE()  => \&_enter_file,
-    EVENT_ENTER_LINE()  => \&_enter_line,
-    EVENT_DIE()  => \&_throw_exception,
-);
 
 my $screen = Term::Screen->new();
 $screen->clrscr();
 
 for my $accessor (qw(
-    io files current_file_path current_file all_lines
+    reader current_file_path current_file all_lines
     num_lines skip_files last_line skip_installed)) { 
     no strict 'refs'; 
     *{$accessor} = sub { $_[0]->{$accessor}; };
@@ -31,25 +22,38 @@ for my $accessor (qw(
 sub new {
     my ($pkg, $path) = @_;
     
-    open my $in, "<", $path or die $!;
     my $self = bless { 
-        io => $in, 
-        files => [], 
         skip_files => {},
         last_line => 0,
         skip_installed => $ENV{RR_SKIP_INC} // 0,
     }, $pkg;
 
+    my $reader = Runops::Recorder::Reader->new($path, { handler => $self });
+
+    $self->{reader} = $reader;
+    
     return $self;
 }
 
-sub _saw_file {
-    my $self = shift;
-    my ($buff, $file_id, $len, $path);
-    $self->io->read($buff, 6);
-    ($file_id, $len) = unpack("LS", $buff);
-    $self->io->read($path, $len);
-    $self->files->[$file_id] = $path;
+sub on_switch_file {
+    my ($self, $id, $path) = @_;
+    
+    close $self->current_file if $self->current_file;
+    $self->{current_file_path} = $path;
+
+    if (-e $self->current_file_path) {
+        open my $file, "<", $self->current_file_path or die $!;
+        $self->{current_file} = $file;
+        my @lines = <$file>;
+        $self->{all_lines} = \@lines;
+        $self->{num_lines} = @lines;
+
+    }
+    else {
+        $self->{current_file} = undef;
+    }    
+    
+    $self->_show_current_file();
 }
 
 sub _show_current_file {
@@ -66,36 +70,17 @@ sub _show_current_file {
     }
 }
 
-sub _enter_file {
-    my $self = shift;
-    my ($buff);
-    $self->io->read($buff, 4);
-    my ($file_id) = unpack("L", $buff);
-    
-    close $self->current_file if $self->current_file;
-    $self->{current_file_path} = $self->files->[$file_id];
-
-
-    if (-e $self->current_file_path) {
-        open my $file, "<", $self->current_file_path or die $!;
-        $self->{current_file} = $file;
-        my @lines = <$file>;
-        $self->{all_lines} = \@lines;
-        $self->{num_lines} = @lines;
-
-    }
-    else {
-        $self->{current_file} = undef;
-    }
-    
-    $self->_show_current_file();
-    
-    1;
-}
-
 {
     my $site_libs = join "|", grep { /^\// } @INC;
     my $site_qr = qr{$site_libs};
+
+    sub on_next_line {
+        my ($self, $line_no) = @_;
+
+        $self->{last_line} = $line_no - 1;
+
+        $self->_show_current_line();
+    }
 
     sub _show_current_line {
         my $self = shift;
@@ -132,26 +117,6 @@ sub _enter_file {
 
         $self->_process_key();
     }
-}
-
-sub _enter_line {
-    my $self = shift;
-
-    my ($buff);
-    $self->io->read($buff, 4);
-    my ($line_no) = unpack("L", $buff);    
-    $line_no--;
-
-    $self->{last_line} = $line_no;
-    
-    $self->_show_current_line();
-}
-
-sub _throw_exception {
-    my $self = shift;
-
-    $screen->at(1, 0);
-    $screen->puts("Threw exception at " . $self->last_line . " in " . $self->current_file_path);
 }
 
 my %KEY_HANDLER = (
@@ -198,16 +163,13 @@ sub _show_help {
     $screen->getch();
     
     $self->_show_current_file();
-    $self->_show_current_line();
-    
+    $self->_show_current_line();    
 }
+
 sub playback {
     my $self = shift;
 
-    while (defined(my $event = $self->io->getc)) {
-        $EVENT{$event}->($self);
-    }
-    
+    $self->reader->read_all();    
     $self->done;
 }
 

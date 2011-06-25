@@ -31,7 +31,7 @@ sub on_next_line {
 }
 
 my $reader = Runops::Recorder::Reader->new("test-recording", { handler => __PACKAGE__ });
-$reader->read;
+$reader->read_all;
 
 is($keyframes, 1);
 is($switched_files, 5);
