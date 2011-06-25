@@ -4,7 +4,11 @@ Makefile.PL
 MANIFEST
 ppport.h
 README
-t/Runops-Recorder.t
+t/01-runops.t
+t/02-reader.t
+t/03-reader-handler-object.t
+t/04-reader-handler-callbacks.t
 lib/Runops/Recorder.pm
+lib/Runops/Recorder/Reader.pm
 lib/Runops/Recorder/Viewer.pm
 bin/rr-viewer
