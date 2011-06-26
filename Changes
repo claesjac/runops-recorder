@@ -1,5 +1,13 @@
 Revision history for Perl extension Runops::Recorder.
 
+0.04  
+    - The format of recordings has changed and is now a directory with a bunch
+      of files instead.
+    - Added a Runops::Recorder::Reader class that can read recordings and
+      callback on different events
+    - Now also records when you enter a sub and the name of it
+    - A new rr-diff tool that shows two recordings side by side
+    
 0.03  Sun Jun 19
     - Adjust number of lines shown to fill the screen if possible
     - Added help page 'h'
