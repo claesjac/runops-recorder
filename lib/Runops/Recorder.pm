@@ -15,7 +15,7 @@ require XSLoader;
 XSLoader::load('Runops::Recorder', $VERSION);
 
 sub import {
-    my ($pkg, $target_dir) = @_;
+    my ($pkg, $target_dir, @opts) = @_;
     
     unless ($target_dir) {
         unless ($ENV{RR_TARGET_DIR}) {
@@ -31,6 +31,9 @@ sub import {
     }
     
     set_target_dir($target_dir);
+
+    # Maybe disable optimizer
+    $^P = 4 if grep { $_ eq "-noopt" } @opts;
     
     init_recorder();
 }
