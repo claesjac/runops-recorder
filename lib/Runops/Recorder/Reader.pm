@@ -80,6 +80,11 @@ sub new {
             $callbacks{$cmd}->($CMD_DATA_TRANSFORMER{$cmd}->($data, $reader), $reader);
         };
     }
+    
+    sub decode {
+        my ($self, $cmd, $data) = @_;
+        return $CMD_DATA_TRANSFORMER{$cmd}->($data, $self);
+    }
 }
 
 sub read_identifiers {
