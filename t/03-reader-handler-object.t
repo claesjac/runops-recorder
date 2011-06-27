@@ -25,9 +25,9 @@ sub on_switch_file {
     $switched_files++;
 }
 
-my $next_lines;
-sub on_next_line {
-    $next_lines++;
+my $next_statements;
+sub on_next_statement {
+    $next_statements++;
 }
 
 my $enter_subs;
@@ -45,7 +45,7 @@ is($keyframes, 1);
 is($switched_files, 5);
 is($seen_file{2}, 't/data/example.pl');
 is(scalar keys %seen_file, 3),
-is($next_lines, 13);
+is($next_statements, 13);
 is($enter_subs, 3);
 is($seen_subs{3}, 'import');
 is($seen_subs{6}, 'foo');

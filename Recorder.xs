@@ -9,13 +9,13 @@
 #define OP_CLASS(o) (PL_opargs[(o)->op_type] & OA_CLASS_MASK)
 #endif
 
-typedef enum {
+enum {
     EVENT_KEYFRAME = 0,
-    EVENT_ENTER_FILE,
-    EVENT_ENTER_LINE,
+    EVENT_SWITCH_FILE,
+    EVENT_NEXT_STATEMENT,
     EVENT_DIE,
     EVENT_ENTER_SUB,
-} Event_type;
+};
 
 typedef enum Event Event;
 
@@ -110,7 +110,7 @@ static void record_switch_file(const char *cop_file) {
     curr_file_id = get_identifier(cop_file);        
     prev_cop_file = cop_file;
     
-    PerlIO_putc(data_io, EVENT_ENTER_FILE);
+    PerlIO_putc(data_io, EVENT_SWITCH_FILE);
     PerlIO_write(data_io, &curr_file_id, sizeof(uint32_t));            
 }
 
@@ -122,7 +122,7 @@ static void record_COP(COP *cop) {
         record_switch_file(cop_file);
     }    
     
-    PerlIO_putc(data_io, EVENT_ENTER_LINE);    
+    PerlIO_putc(data_io, EVENT_NEXT_STATEMENT);    
     PerlIO_write(data_io, &cop_line, sizeof(uint32_t));
         
     check_and_insert_keyframe();

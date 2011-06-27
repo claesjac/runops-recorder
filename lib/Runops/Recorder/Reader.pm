@@ -8,6 +8,26 @@ use File::Spec;
 
 use accessors::ro qw(identifiers_fh data_fh identifiers handler skip_keyframes);
 
+require Exporter;
+our @ISA = qw(Exporter);
+
+our @EXPORT = qw();
+our @EXPORT_OK = qw(
+    KEYFRAME SWITCH_FILE NEXT_STATEMENT DIE ENTER_SUB
+);
+
+our %EXPORT_TAGS = (
+    all => [@EXPORT_OK]
+);
+
+use constant {
+    KEYFRAME        => 0,
+    SWITCH_FILE     => 1,
+    NEXT_STATEMENT  => 2,
+    DIE             => 3,
+    ENTER_SUB       => 4,
+};
+
 sub new {
     my ($pkg, $dir, $opts) = @_;
     
@@ -45,7 +65,7 @@ sub new {
     my %CMD_TO_NAME = (
         0 => 'on_keyframe',
         1 => 'on_switch_file',
-        2 => 'on_next_line',
+        2 => 'on_next_statement',
         3 => 'on_die',
         4 => 'on_enter_sub',
     );
@@ -207,7 +227,7 @@ your handlers for each type of item it reads.
     print "Now in file: $path\n";
   }
   
-  sub on_next_line {
+  sub on_next_statement {
     my ($self, $line_no) = @_;
     print "Executing line: $line_no\n";
   }
@@ -250,6 +270,21 @@ generate an event or be returned from C<read_next>
 =over 4
 
 =item read_next
+
+Reads the next entry in the recording and returns a list with the numeric event and 
+its decoded contents. See L</EVENTS>
+
+=item read_all
+
+Reads thru the recording generating events.
+
+=item read_identifiers
+
+Reads the identifiers, files etc that we saw during recording
+
+=item skip_until ( $event )
+
+Reads all events until the next of of type I<$event> occurs.
 
 =back
 

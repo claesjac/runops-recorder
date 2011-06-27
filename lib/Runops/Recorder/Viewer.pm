@@ -74,7 +74,7 @@ sub _show_current_file {
     my $site_libs = join "|", grep { /^\// } @INC;
     my $site_qr = qr{$site_libs};
 
-    sub on_next_line {
+    sub on_next_statement {
         my ($self, $line_no) = @_;
 
         $self->{last_line} = $line_no - 1;

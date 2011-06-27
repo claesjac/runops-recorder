@@ -51,7 +51,7 @@ sub on_switch_file {
     close $in;
 }
 
-sub on_next_line {
+sub on_next_statement {
     my ($self, $line, $reader) = @_;
     
     my $data = $self->sources->[$self->reader_id->{$reader}]->[$line - 1];

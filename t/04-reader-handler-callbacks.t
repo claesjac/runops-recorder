@@ -14,13 +14,13 @@ fail "Failed to generate test data" if $? or !-e "test-recording/main.data";
 
 my $keyframes;
 my $switched_files;
-my $next_lines;
+my $next_statements;
 my $enter_subs;
 
 my %handlers = (
     on_keyframe => sub { $keyframes++ },
     on_switch_file => sub { $switched_files++ },
-    on_next_line => sub { $next_lines++ },
+    on_next_statement => sub { $next_statements++ },
     on_enter_sub => sub { $enter_subs++ },
 );
 
@@ -30,4 +30,4 @@ $reader->read_all;
 is($keyframes, 1);
 is($switched_files, 5);
 is($enter_subs, 3);
-is($next_lines, 13);
+is($next_statements, 13);
