@@ -10,7 +10,7 @@ BEGIN { use_ok("Runops::Recorder::Reader"); }
 qx{$^X -Mblib -MRunops::Recorder=test-recording t/data/example.pl};
 fail "Failed to generate test data" if $? or !-e "test-recording/main.data";
 
-my $reader = Runops::Recorder::Reader->new("test-recording");
+my $reader = Runops::Recorder::Reader->new("test-recording", { skip_keyframes => 0 });
 
 my ($cmd, $data) = $reader->read_next();
 is($cmd, 0);

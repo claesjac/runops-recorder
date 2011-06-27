@@ -24,7 +24,7 @@ my %handlers = (
     on_enter_sub => sub { $enter_subs++ },
 );
 
-my $reader = Runops::Recorder::Reader->new("test-recording", { handlers => \%handlers });
+my $reader = Runops::Recorder::Reader->new("test-recording", { handlers => \%handlers, skip_keyframes => 0 });
 $reader->read_all;
 
 is($keyframes, 1);

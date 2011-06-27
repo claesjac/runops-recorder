@@ -38,7 +38,7 @@ sub on_enter_sub {
     $enter_subs++;
 }
 
-my $reader = Runops::Recorder::Reader->new("test-recording", { handler => __PACKAGE__ });
+my $reader = Runops::Recorder::Reader->new("test-recording", { handler => __PACKAGE__, skip_keyframes => 0 });
 $reader->read_all;
 
 is($keyframes, 1);

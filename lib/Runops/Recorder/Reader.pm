@@ -6,7 +6,7 @@ use warnings;
 use Fcntl qw(SEEK_CUR SEEK_END SEEK_SET);
 use File::Spec;
 
-use accessors::ro qw(identifiers_fh data_fh identifiers handler);
+use accessors::ro qw(identifiers_fh data_fh identifiers handler skip_keyframes);
 
 sub new {
     my ($pkg, $dir, $opts) = @_;
@@ -24,11 +24,15 @@ sub new {
         $handler = _make_callback_handler($opts->{handlers});
     }
     
+    # This means that read_next will ignore keyframe commands
+    my $skip_keyframes = $opts->{skip_keyframes} // 1;
+    
     my $self = bless { 
         data_fh => $data_fh, 
         identifiers_fh => $identifiers_fh,
         identifiers => {},
         handler => $handler,
+        skip_keyframes => $skip_keyframes,
     }, $pkg;
 
     $self->find_next_keyframe;
@@ -116,6 +120,10 @@ sub read_next {
     if ($read == 5) {
         # decode
         my ($cmd, $data) = unpack("Ca*", $buff);
+
+        # This is a keyframe, return next instead
+        return $self->read_next if $cmd == 0 && $self->skip_keyframes;
+
         $self->handler->($cmd, $data, $self) if $self->handler;
         return ($cmd, $data);
     }
@@ -207,6 +215,43 @@ your handlers for each type of item it reads.
   1;
   
 =head1 INTERFACE
+
+=head2 CLASS METHODS
+
+=over 4
+
+=item new ( $path [, \%opts ] )
+
+Creates a new instance of this class. Takes I<$path> which must be a path to a 
+recording and an optional hashref with options. Valid options are
+
+=over 4
+
+=item handler
+
+An package name or instance of a class which on which methods will be called when 
+events occur. See L</EVENTS>
+
+=item handlers
+
+A hashref with event/callback pairs that are called when events occur. See L</EVENTS>
+
+=item skip_keyframes
+
+An boolean that indicates wheter keyframes should be skipped or not - ie, not 
+generate an event or be returned from C<read_next>
+
+=back
+
+=back
+
+=head2 INSTANCE METHODS
+
+=over 4
+
+=item read_next
+
+=back
 
 =cut
 
