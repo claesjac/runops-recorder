@@ -17,7 +17,7 @@ our @EXPORT_OK = qw(
 );
 
 our %EXPORT_TAGS = (
-    all => [@EXPORT_OK]
+    events => [@EXPORT_OK]
 );
 
 use constant {
@@ -71,10 +71,10 @@ sub new {
     );
     
     my %CMD_DATA_TRANSFORMER = (
-        0 => sub { return (0) },
+        0 => sub {},
         1 => sub { my ($file_no) = unpack("L", $_[0]); return ($file_no, $_[1]->get_identifier($file_no)) },
         2 => sub { my ($line_no) = unpack("L", $_[0]); return ($line_no) },
-        3 => sub { my ($line_no) = unpack("L", $_[0]); return ($line_no) },
+        3 => sub {},
         4 => sub { my ($identifier_no) = unpack("L", $_[0]); return ($identifier_no, $_[1]->get_identifier($identifier_no)) },
     );
     
@@ -286,7 +286,52 @@ Reads the identifiers, files etc that we saw during recording
 
 Reads all events until the next of of type I<$event> occurs.
 
+=item get_identifier ( $id ) 
+
+Returns the identifier with the given I<$id>.
+
+=item find_next_keyframe 
+
+Searches for the next keyframe. This is to be used in the future when one can 
+tail recordings being generated.
+
+=item decode ( $event, $data )
+
+Decodes the blob I<$data> according to the rules for the specific event and returns a list of values.
+
 =back
+
+=head1 EVENTS
+
+The following events may occur in the recording. They can be returned by C<read_next> or cause a 
+callback/method to be invoked.
+
+The kind of events that can happen. Numeric code, constant and callback name within parenthesis for each item.
+
+=over 4
+
+=item Keyframe (0, C<KEYFRAME>, C<on_keyframe>)
+
+A keyframe is an entry that we can wait for in tailing mode to know where we can start reading. These are 
+inserted every 1024 events or so. No data/arguments.
+
+=item Switch file (1, C<SWITCH_FILE>, C<on_switch_file>)
+
+Happens when we execute a statement in another source file than the current one. No arguments.
+
+=item Next statment (2, C<NEXT_STATEMENT>, C<on_next_statement>)
+
+A statement has been executed. Data/argument is C<line number>.
+
+=item Enter subroutine (4, C<ENTER_SUB>, C<on_enter_sub>)
+
+A subroutine was called. Data/arguments are C<identifier id> and C<identifier>.
+
+=back
+
+=head1 EXPORT
+
+Nothing is exported by default. The tag I<events> export the event constants listed about in L</EVENTS>.
 
 =cut
 

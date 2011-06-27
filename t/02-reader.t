@@ -15,6 +15,7 @@ my $reader = Runops::Recorder::Reader->new("test-recording", { skip_keyframes =>
 my ($cmd, $data) = $reader->read_next();
 is($cmd, 0);
 is($data, "\0\0\0\0");
+is_deeply ([$reader->decode($cmd, $data)], []);
 
 ($cmd, $data) = $reader->read_next();
 is($cmd, 1);

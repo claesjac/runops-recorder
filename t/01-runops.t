@@ -5,8 +5,9 @@
 
 # change 'tests => 1' to 'tests => last_test_to_print';
 
-use Test::More tests => 1;
-BEGIN { use_ok('Runops::Recorder') };
+use Test::More tests => 2;
+
+BEGIN { use_ok('Runops::Recorder', qw(test-recording)) };
 
 #########################
 
@@ -23,4 +24,4 @@ eval {
     foo();
 };
 
-print "1";
+ok(-e "test-recording/main.data");
