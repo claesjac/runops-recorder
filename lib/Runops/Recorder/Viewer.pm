@@ -79,6 +79,10 @@ sub _show_current_file {
 
         $self->{last_line} = $line_no - 1;
 
+        return unless $self->current_file;
+        return if $self->skip_files->{$self->current_file_path};
+        return if $self->skip_installed && $self->current_file_path =~ $site_qr;
+
         $self->_show_current_line();
         $self->_process_key();
     }
@@ -86,10 +90,6 @@ sub _show_current_file {
     sub _show_current_line {
         my $self = shift;
     
-        return unless $self->current_file;
-        return if $self->skip_files->{$self->current_file_path};
-        return if $self->skip_installed && $self->current_file_path =~ $site_qr;
-
         my $line_no = $self->last_line;
         
         my $screen_cols = $screen->cols;
