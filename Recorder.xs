@@ -19,12 +19,44 @@ enum {
 
 typedef enum Event Event;
 
+#define DATA_BUFFER_SIZE 65536
+#define DATA_BUFFER_MAX 65500
+
+static char* data_buffer_base;
+static char* data_buffer;
+static uint32_t data_buffer_len;
+
+#define WRITE_EVENT(x,y,z) \
+    if (data_buffer - data_buffer_base > DATA_BUFFER_MAX) { \
+        PerlIO_write(data_io, data_buffer_base, data_buffer - data_buffer_base); \
+        data_buffer = data_buffer_base; \
+        data_buffer_len = 0; \
+    } \
+    *data_buffer = x; \
+    Copy(&y, data_buffer + 1, 1, z); \
+    data_buffer += sizeof(z) + 1;
+
+/*
+ This is so our tailing viewer knows where to start. It's inserted 
+ here and there
+*/
+const char* KEYFRAME_DATA = "\0\0\0\0\0";
+
+#define WRITE_KEYFRAME \
+    if (data_buffer - data_buffer_base > DATA_BUFFER_MAX) { \
+        PerlIO_write(data_io, data_buffer_base, data_buffer - data_buffer_base); \
+        data_buffer = data_buffer_base; \
+        data_buffer_len = 0; \
+    } \
+    Copy(KEYFRAME_DATA, data_buffer, 5, char); \
+    data_buffer += 5;
+
 /* Where the recording go */
-static PerlIO* data_io;
+static PerlIO* data_io = NULL;
 
 /* Where the source files go */
 static HV* seen_identifier;
-static PerlIO* identifiers_io;
+static PerlIO* identifiers_io = NULL;
 
 static const char* base_dir;
 static size_t base_dir_len;
@@ -36,12 +68,6 @@ static uint32_t next_identifier_id = 1;
 
 static bool is_initial_recorder = TRUE;
 
-/*
- This is so our tailing viewer knows where to start. It's inserted 
- here and there
-*/
-const char* KEYFRAME_DATA = "\0\0\0\0\0";
-
 int runops_recorder(pTHX);
 static const char *create_path(const char *);
 static void open_recording_files();
@@ -52,7 +78,7 @@ static void record_OP_ENTERSUB(UNOP *);
 static uint16_t keyframe_counter;
 static inline void check_and_insert_keyframe() {
     if (keyframe_counter & 0x400) {
-        PerlIO_write(data_io, KEYFRAME_DATA, 5);
+        WRITE_KEYFRAME;
         keyframe_counter = 0;
     }
 }
@@ -72,15 +98,34 @@ static const char* create_path(const char *filename) {
 void open_recording_files() {
     pid_t pid = getpid();
     
+    if (data_io != NULL) {
+        PerlIO_close(data_io);
+    }
+    
     const char *fn = create_path(is_initial_recorder == TRUE ? "main.data" : Perl_form("%d.data", pid));
     data_io = PerlIO_open(fn, "w");
-    PerlIO_write(data_io, KEYFRAME_DATA, 5);
+    WRITE_KEYFRAME;
     Safefree(fn);
+
+    if (identifiers_io != NULL) {
+        PerlIO_close(identifiers_io);
+    }
     
     fn = create_path(is_initial_recorder == TRUE ? "main.identifiers" : Perl_form("%d.identifiers", pid));
     identifiers_io = PerlIO_open(fn, "w");
     get_identifier("(unknown identifier)");
     Safefree(fn);
+}
+
+void finish_recording() {
+    if (data_buffer - data_buffer_base > 0) {
+        const char *fn = create_path(is_initial_recorder == TRUE ? "main.data" : Perl_form("%d.data", getpid()));
+        data_io = PerlIO_open(fn, "a");
+        Safefree(fn);
+        PerlIO_write(data_io, data_buffer_base, data_buffer - data_buffer_base);        
+        PerlIO_flush(data_io);
+        PerlIO_close(data_io);
+    }
 }
 
 static uint32_t get_identifier(const char *identifier) {
@@ -110,8 +155,7 @@ static void record_switch_file(const char *cop_file) {
     curr_file_id = get_identifier(cop_file);        
     prev_cop_file = cop_file;
     
-    PerlIO_putc(data_io, EVENT_SWITCH_FILE);
-    PerlIO_write(data_io, &curr_file_id, sizeof(uint32_t));            
+    WRITE_EVENT(EVENT_SWITCH_FILE, curr_file_id, uint32_t);
 }
 
 static void record_COP(COP *cop) {
@@ -121,20 +165,20 @@ static void record_COP(COP *cop) {
     if (prev_cop_file != cop_file && cop_file != NULL) {
         record_switch_file(cop_file);
     }    
-    
-    PerlIO_putc(data_io, EVENT_NEXT_STATEMENT);    
-    PerlIO_write(data_io, &cop_line, sizeof(uint32_t));
-        
+
+    WRITE_EVENT(EVENT_NEXT_STATEMENT, cop_line, uint32_t);
+            
     check_and_insert_keyframe();
 }
 
 static void record_OP_ENTERSUB(UNOP *op) {
     const PERL_CONTEXT *cx = caller_cx(0, NULL);
-    const GV *gv = CvGV(cx->blk_sub.cv);
-    if (isGV(gv)) {
-        uint32_t identifier = get_identifier(Perl_form("%s::%s", HvNAME(GvSTASH(gv)), GvNAME(gv)));
-        PerlIO_putc(data_io, EVENT_ENTER_SUB);        
-        PerlIO_write(data_io, &identifier, sizeof(uint32_t));                
+    if (CxTYPE(cx) == CXt_SUB) {
+        const GV *gv = CvGV(cx->blk_sub.cv);
+        if (isGV(gv)) {
+            uint32_t identifier = get_identifier(Perl_form("%s::%s", HvNAME(GvSTASH(gv)), GvNAME(gv)));
+            WRITE_EVENT(EVENT_ENTER_SUB, identifier, uint32_t);
+        }
     }
 }
 
@@ -167,8 +211,10 @@ int runops_recorder(pTHX) {
 
 void init_recorder() {
     seen_identifier = newHV();
-        
+    Newxz(data_buffer_base, DATA_BUFFER_SIZE, char);
+    data_buffer = data_buffer_base;
     open_recording_files();
+    atexit(finish_recording);
     
     PL_runops = runops_recorder;
 }
@@ -188,4 +234,4 @@ set_target_dir(path)
 void
 init_recorder()
     CODE:
-        init_recorder();    
+        init_recorder();
