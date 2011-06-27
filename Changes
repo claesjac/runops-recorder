@@ -1,6 +1,6 @@
 Revision history for Perl extension Runops::Recorder.
 
-0.04  
+0.04  Mon Jun 27
     - The format of recordings has changed and is now a directory with a bunch
       of files instead.
     - Added a Runops::Recorder::Reader class that can read recordings and
