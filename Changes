@@ -1,5 +1,8 @@
 Revision history for Perl extension Runops::Recorder.
 
+0.05
+    - Subroutine names are now fully qualified
+    
 0.04  Mon Jun 27
     - The format of recordings has changed and is now a directory with a bunch
       of files instead.

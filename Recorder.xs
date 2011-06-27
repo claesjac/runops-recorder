@@ -132,7 +132,7 @@ static void record_OP_ENTERSUB(UNOP *op) {
     const PERL_CONTEXT *cx = caller_cx(0, NULL);
     const GV *gv = CvGV(cx->blk_sub.cv);
     if (isGV(gv)) {
-        uint32_t identifier = get_identifier(GvNAME(gv));
+        uint32_t identifier = get_identifier(Perl_form("%s::%s", HvNAME(GvSTASH(gv)), GvNAME(gv)));
         PerlIO_putc(data_io, EVENT_ENTER_SUB);        
         PerlIO_write(data_io, &identifier, sizeof(uint32_t));                
     }

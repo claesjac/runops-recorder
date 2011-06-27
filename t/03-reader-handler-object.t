@@ -47,6 +47,6 @@ is($seen_file{2}, 't/data/example.pl');
 is(scalar keys %seen_file, 3),
 is($next_statements, 13);
 is($enter_subs, 3);
-is($seen_subs{3}, 'import');
-is($seen_subs{6}, 'foo');
-is(scalar keys %seen_subs, 2),
+is($seen_subs{3}, 'strict::import');
+is($seen_subs{7}, 'main::foo');
+is(scalar keys %seen_subs, 3),
