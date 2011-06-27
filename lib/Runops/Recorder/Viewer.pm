@@ -80,6 +80,7 @@ sub _show_current_file {
         $self->{last_line} = $line_no - 1;
 
         $self->_show_current_line();
+        $self->_process_key();
     }
 
     sub _show_current_line {
@@ -113,9 +114,7 @@ sub _show_current_file {
             my $src = sprintf("% ${p}d: %s", $l, substr($self->all_lines->[$l], 0, $screen_cols - ($p + 2)));
             $screen->puts($src);
             $screen->normal if $l == $line_no;
-        }    
-
-        $self->_process_key();
+        }        
     }
 }
 
