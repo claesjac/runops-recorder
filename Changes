@@ -1,6 +1,8 @@
 Revision history for Perl extension Runops::Recorder.
 
 0.05
+    - Events are now written to a buffer before being written down to disk
+      to reduce the I/O
     - Subroutine names are now fully qualified
     
 0.04  Mon Jun 27
