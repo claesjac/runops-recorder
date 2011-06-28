@@ -323,6 +323,10 @@ Happens when we execute a statement in another source file than the current one.
 
 A statement has been executed. Data/argument is C<line number>.
 
+=item Die (3, C<DIE>, C<on_die>)
+
+The program threw an exception using C<die>. No data/arguments.
+
 =item Enter subroutine (4, C<ENTER_SUB>, C<on_enter_sub>)
 
 A subroutine was called. Data/arguments are C<identifier id> and C<identifier>.

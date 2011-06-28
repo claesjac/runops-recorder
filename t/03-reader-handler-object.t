@@ -38,6 +38,11 @@ sub on_enter_sub {
     $enter_subs++;
 }
 
+my $die;
+sub on_die {
+    $die++;
+}
+
 my $reader = Runops::Recorder::Reader->new("test-recording", { handler => __PACKAGE__, skip_keyframes => 0 });
 $reader->read_all;
 
@@ -45,8 +50,9 @@ is($keyframes, 1);
 is($switched_files, 5);
 is($seen_file{2}, 't/data/example.pl');
 is(scalar keys %seen_file, 3),
-is($next_statements, 13);
+is($next_statements, 14);
 is($enter_subs, 3);
 is($seen_subs{3}, 'strict::import');
 is($seen_subs{7}, 'main::foo');
 is(scalar keys %seen_subs, 3),
+is($die, 1);

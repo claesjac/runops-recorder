@@ -182,24 +182,37 @@ static void record_OP_ENTERSUB(UNOP *op) {
     }
 }
 
+static uint32_t empty = 0;
+static void record_OP_DIE(LISTOP *op) {
+    WRITE_EVENT(EVENT_DIE, empty, uint32_t);
+}
+
 int runops_recorder(pTHX) {
     dVAR;
     OP *prev_op;    
+    PERL_BITFIELD16 op_type;
     
     while (PL_op) {
         if (OP_CLASS(PL_op) == OA_COP) {
             record_COP(cCOPx(PL_op));
         }
-    
-        prev_op = PL_op;
+
+        op_type = PL_op->op_type;
         
+        switch(op_type) {
+            case OP_DIE:
+                record_OP_DIE(cLISTOPx(PL_op));            
+            break;
+        }
+            
+        /* Perform the op */
         PL_op = CALL_FPTR(PL_op->op_ppaddr)(aTHX);    
 
         /* Maybe perform something */
-        switch(prev_op->op_type) {
+        switch(op_type) {
             case OP_ENTERSUB:
                 record_OP_ENTERSUB(cUNOPx(PL_op));
-            break;
+            break;            
         }
 
         PERL_ASYNC_CHECK();

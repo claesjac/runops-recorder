@@ -4,7 +4,9 @@ use strict;
 use warnings;
 
 sub foo {
-    
+    eval {
+        die "bar";
+    };
 }
 
 foo();
