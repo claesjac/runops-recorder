@@ -15,7 +15,10 @@ require XSLoader;
 XSLoader::load('Runops::Recorder', $VERSION);
 
 sub import {
-    my ($pkg, $target_dir, @opts) = @_;
+    my ($pkg, @opts) = @_;
+
+    my $target_dir;
+    $target_dir = $opts[0] if $opts[0] !~ /^-/;
     
     unless ($target_dir) {
         unless ($ENV{RR_TARGET_DIR}) {
@@ -46,16 +49,27 @@ Runops::Recorder - Runops replacement which saves what is being performed
 
 =head1 SYNOPSIS
 
-  # will save to a runops-recorder.data file in the current directory
+  # will save to a rr-<timestamp> directory in the current directory
   perl -MRunops::Recorder <program>
 
+  # will save to a custom directory 
+  perl -MRunops::Recorder=my_recording <program>
+  
   # and then to view the recording
-  rr-viewer runops-recorder.data
+  rr-viewer <path to recording>
   
 =head1 DESCRIPTION
 
 Runops::Recorder is an alternative runops which saves what it does into a file 
 that can later be viewed using the rr-viewer tool.
+
+=head1 HOW TO RECORD
+
+Simply use this module and it'll replace perl's standard runloop with its own. By 
+default a recording goes into a directory named rr-<date>-_<time>. If you want an 
+alternate name just pass it as the first argument to the use (eg -MRunops::Recorder=foo). 
+Sometimes perl will optimize away COPs and this may look confusing when viewing. If you 
+want to turn of the optimizer pass C<-noopt> when using this module.
 
 =head1 VIEWING THE RECORDING
 
