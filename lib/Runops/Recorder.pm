@@ -18,7 +18,7 @@ sub import {
     my ($pkg, @opts) = @_;
 
     my $target_dir;
-    $target_dir = $opts[0] if $opts[0] !~ /^-/;
+    $target_dir = $opts[0] if defined $opts[0] && $opts[0] !~ /^-/;
     
     unless ($target_dir) {
         unless ($ENV{RR_TARGET_DIR}) {
