@@ -3,7 +3,8 @@ Revision history for Perl extension Runops::Recorder.
 0.06 
     - Silence warning 'Use of uninitialized value $opts[0]' when loading without arguments
     - RR_AUTORUN and RR_SKIP_INC are now available as -a <delay> and -s arguments to rr-viewer
-
+    - When done viewing the recording show the last place we were at
+    
 0.05  Wed Jun 29
     - Improved documentation on how to use this
     - 'die' is now recorded

@@ -178,8 +178,14 @@ sub playback {
 }
 
 sub done {
+    my $self = shift;
+
+    $self->_show_current_file();
+    $self->_show_current_line();    
+    
     $screen->at(0, 0)->clreol();
     $screen->at(0, 0)->puts("Playback completed, press the ANY key to quit...");
+
   
     $screen->getch();
     
