@@ -9,7 +9,7 @@ use Carp;
 use File::Path qw(make_path);
 use POSIX qw(strftime);
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 require XSLoader;
 XSLoader::load('Runops::Recorder', $VERSION);
