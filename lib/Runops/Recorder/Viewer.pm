@@ -14,18 +14,23 @@ $screen->clrscr();
 
 for my $accessor (qw(
     reader current_file_path current_file all_lines
-    num_lines skip_files last_line skip_installed)) { 
+    num_lines skip_files last_line skip_installed
+    autorun
+    )) { 
     no strict 'refs'; 
     *{$accessor} = sub { $_[0]->{$accessor}; };
 }
 
 sub new {
-    my ($pkg, $path) = @_;
+    my ($pkg, $path, $args) = @_;
+    
+    $args = {} unless ref $args eq 'HASH';
     
     my $self = bless { 
         skip_files => {},
         last_line => 0,
-        skip_installed => $ENV{RR_SKIP_INC} // 0,
+        skip_installed => $ENV{RR_SKIP_INC} || $args->{skip_installed} || 0,
+        autorun => $ENV{RR_AUTORUN} || $args->{autorun} || 0,
     }, $pkg;
 
     my $reader = Runops::Recorder::Reader->new($path, { handler => $self });
@@ -135,8 +140,8 @@ my %KEY_HANDLER = (
 sub _process_key {
     my $self = shift;
     
-    if ($ENV{RR_AUTORUN}) {
-        sleep $ENV{RR_AUTORUN};
+    if ($self->{autorun}) {
+        sleep $self->{autorun};
         return;
     }
     
@@ -182,9 +187,9 @@ sub done {
 }
 
 sub view {
-    my ($pkg, $path) = @_;
+    my ($pkg, $path, $args) = @_;
 
-    my $viewer = $pkg->new($path);
+    my $viewer = $pkg->new($path, $args);
     
     $viewer->playback();
 }

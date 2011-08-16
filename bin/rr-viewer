@@ -1,10 +1,21 @@
 #!/usr/bin/perl
 
+use strict;
+use warnings;
+
+use Getopt::Long qw(GetOptions);
+
 use Runops::Recorder::Viewer;
 
-unless (@ARGV) {
-    print "Usage: rr-viewer <file>\n";
+my ($skip_installed, $autorun);
+
+unless (GetOptions("skipsite" => \$skip_installed, "autorun=f" => \$autorun )) {
+    print "Usage: rr-viewer [--skipsite] [--autorun=<delay>] <file>\n";
     exit -1;
 }
 
-Runops::Recorder::Viewer->view(shift);
+my %args;
+$args{skip_installed} = 1 if $skip_installed;
+$args{autorun} = $autorun if $autorun;
+
+Runops::Recorder::Viewer->view(shift, \%args);
