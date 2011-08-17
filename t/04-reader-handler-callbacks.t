@@ -17,6 +17,7 @@ my $switched_files;
 my $next_statements;
 my $enter_subs;
 my $die;
+my $keyframe_timestamps;
 
 my %handlers = (
     on_keyframe => sub { $keyframes++ },
@@ -24,12 +25,14 @@ my %handlers = (
     on_next_statement => sub { $next_statements++ },
     on_enter_sub => sub { $enter_subs++ },
     on_die => sub { $die++ },
+    on_keyframe_timestamp => sub { $keyframe_timestamps++; },
 );
 
 my $reader = Runops::Recorder::Reader->new("test-recording", { handlers => \%handlers, skip_keyframes => 0 });
 $reader->read_all;
 
-is($keyframes, 2);
+is($keyframes, 1);
+is($keyframe_timestamps, 1);
 is($switched_files, 5);
 is($enter_subs, 3);
 is($next_statements, 14);

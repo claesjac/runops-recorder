@@ -81,9 +81,7 @@ sub _show_current_file {
         $screen->bold->puts("Can't find file\n")->normal();                
     }
 
-    $screen->at(1, 0);
-    $screen->bold->puts("Last tz: ", $self->{last_tz});
-
+    $screen->at(1, 0)->puts("At: " . $self->{last_tz});
 }
 
 {
@@ -117,7 +115,7 @@ sub _show_current_file {
         # Adjust to fill screen
         $to += ($screen->rows - 4 - ($to - $from)) if ($to - $from) < $screen->rows - 4;
 
-        $screen->at(1, 0)->puts($self->{last_tz});    
+        $screen->at(1, 0)->puts("At: " . $self->{last_tz});    
 
         $screen->at(2, 0);
         $screen->clreos();

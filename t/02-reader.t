@@ -18,6 +18,10 @@ is($data, "\0\0\0\0");
 is_deeply ([$reader->decode($cmd, $data)], []);
 
 ($cmd, $data) = $reader->read_next();
+is($cmd, 5);
+is(length $data, 8);
+
+($cmd, $data) = $reader->read_next();
 is($cmd, 1);
 is($data, "\2\0\0\0");
 is($reader->get_identifier(2), "t/data/example.pl");

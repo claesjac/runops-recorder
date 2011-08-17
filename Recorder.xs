@@ -125,7 +125,7 @@ void open_recording_files() {
     
     const char *fn = create_path(is_initial_recorder == TRUE ? "main.data" : Perl_form("%d.data", pid));
     data_io = PerlIO_open(fn, "w");
-    WRITE_KEYFRAME;
+    check_and_insert_keyframe();
     Safefree(fn);
 
     if (identifiers_io != NULL) {

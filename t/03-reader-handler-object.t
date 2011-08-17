@@ -55,7 +55,7 @@ sub on_die {
 my $reader = Runops::Recorder::Reader->new("test-recording", { handler => __PACKAGE__, skip_keyframes => 0 });
 $reader->read_all;
 
-is($keyframes, 2);
+is($keyframes, 1);
 is($switched_files, 5);
 is($seen_file{2}, 't/data/example.pl');
 is(scalar keys %seen_file, 3),
