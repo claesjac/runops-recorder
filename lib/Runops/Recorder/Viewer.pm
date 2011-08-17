@@ -61,6 +61,13 @@ sub on_switch_file {
     $self->_show_current_file();
 }
 
+sub on_keyframe_timestamp {
+    my ($self, $tz_sec, $tz_usec) = @_;
+    
+    my ($sec, $min, $hour, $day, $month, $year) = localtime($tz_sec);
+    $self->{last_tz} = sprintf("%04d-%02d-%02d %02d:%02d:%02d.%08d", $year + 1900, $month + 1, $day, $hour, $min, $sec, $tz_usec);
+}
+
 sub _show_current_file {
     my $self = shift;
     
@@ -73,6 +80,10 @@ sub _show_current_file {
     else {
         $screen->bold->puts("Can't find file\n")->normal();                
     }
+
+    $screen->at(1, 0);
+    $screen->bold->puts("Last tz: ", $self->{last_tz});
+
 }
 
 {
@@ -105,7 +116,9 @@ sub _show_current_file {
     
         # Adjust to fill screen
         $to += ($screen->rows - 4 - ($to - $from)) if ($to - $from) < $screen->rows - 4;
-    
+
+        $screen->at(1, 0)->puts($self->{last_tz});    
+
         $screen->at(2, 0);
         $screen->clreos();
         my $p = length $self->num_lines;

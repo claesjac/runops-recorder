@@ -4,6 +4,8 @@
 
 #include "ppport.h"
 
+#include <sys/time.h>
+
 /* Doesn't seem to exist before 5.14 */
 #ifndef OP_CLASS
 #define OP_CLASS(o) (PL_opargs[(o)->op_type] & OA_CLASS_MASK)
@@ -15,6 +17,7 @@ enum {
     EVENT_NEXT_STATEMENT,
     EVENT_DIE,
     EVENT_ENTER_SUB,
+    EVENT_TZ
 };
 
 typedef enum Event Event;
@@ -49,7 +52,7 @@ const char* KEYFRAME_DATA = "\0\0\0\0\0";
         data_buffer_len = 0; \
     } \
     Copy(KEYFRAME_DATA, data_buffer, 5, char); \
-    data_buffer += 5;
+    data_buffer += 5; \
 
 /* Where the recording go */
 static PerlIO* data_io = NULL;
@@ -75,12 +78,30 @@ static uint32_t get_identifier(const char *);
 static void record_COP(COP *);
 static void record_OP_ENTERSUB(UNOP *);
 
-static uint16_t keyframe_counter;
+static uint16_t keyframe_counter = 0x400;
 static inline void check_and_insert_keyframe() {
+    struct timeval tp;
+
+    
     if (keyframe_counter & 0x400) {
         WRITE_KEYFRAME;
+
+        if (gettimeofday(&tp, NULL) == 0) {
+            int seconds = (int) tp.tv_sec;
+            int usec = (int) tp.tv_usec;
+            *data_buffer = EVENT_TZ;
+            Copy(&seconds, data_buffer + 1, 1, int);
+            Copy(&usec, data_buffer + 5, 1, int);
+            data_buffer += 9;
+        }
+        else {
+        }
+
         keyframe_counter = 0;
     }
+
+    keyframe_counter++;
+
 }
 
 static const char* create_path(const char *filename) {

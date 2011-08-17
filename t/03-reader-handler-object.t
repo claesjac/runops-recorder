@@ -38,6 +38,15 @@ sub on_enter_sub {
     $enter_subs++;
 }
 
+my $timestamps;
+my ($last_sec_tz, $last_usec_tz);
+sub on_keyframe_timestamp {
+    my (undef, $sec, $usec) = @_;
+    $timestamps++;
+    $last_sec_tz = $sec;
+    $last_usec_tz = $usec;
+}
+
 my $die;
 sub on_die {
     $die++;
@@ -46,7 +55,7 @@ sub on_die {
 my $reader = Runops::Recorder::Reader->new("test-recording", { handler => __PACKAGE__, skip_keyframes => 0 });
 $reader->read_all;
 
-is($keyframes, 1);
+is($keyframes, 2);
 is($switched_files, 5);
 is($seen_file{2}, 't/data/example.pl');
 is(scalar keys %seen_file, 3),
@@ -56,3 +65,5 @@ is($seen_subs{3}, 'strict::import');
 is($seen_subs{7}, 'main::foo');
 is(scalar keys %seen_subs, 3),
 is($die, 1);
+ok(defined $last_sec_tz);
+ok(defined $last_usec_tz);

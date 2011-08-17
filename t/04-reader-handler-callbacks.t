@@ -29,7 +29,7 @@ my %handlers = (
 my $reader = Runops::Recorder::Reader->new("test-recording", { handlers => \%handlers, skip_keyframes => 0 });
 $reader->read_all;
 
-is($keyframes, 1);
+is($keyframes, 2);
 is($switched_files, 5);
 is($enter_subs, 3);
 is($next_statements, 14);

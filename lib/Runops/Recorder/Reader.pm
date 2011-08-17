@@ -13,7 +13,7 @@ our @ISA = qw(Exporter);
 
 our @EXPORT = qw();
 our @EXPORT_OK = qw(
-    KEYFRAME SWITCH_FILE NEXT_STATEMENT DIE ENTER_SUB
+    KEYFRAME SWITCH_FILE NEXT_STATEMENT DIE ENTER_SUB KEYFRAME_TZ
 );
 
 our %EXPORT_TAGS = (
@@ -26,6 +26,7 @@ use constant {
     NEXT_STATEMENT  => 2,
     DIE             => 3,
     ENTER_SUB       => 4,
+    KEYFRAME_TZ     => 5,
 };
 
 sub new {
@@ -68,6 +69,7 @@ sub new {
         2 => 'on_next_statement',
         3 => 'on_die',
         4 => 'on_enter_sub',
+        5 => 'on_keyframe_timestamp',
     );
     
     my %CMD_DATA_TRANSFORMER = (
@@ -76,6 +78,10 @@ sub new {
         2 => sub { my ($line_no) = unpack("L", $_[0]); return ($line_no) },
         3 => sub {},
         4 => sub { my ($identifier_no) = unpack("L", $_[0]); return ($identifier_no, $_[1]->get_identifier($identifier_no)) },
+        5 => sub { 
+            my ($seconds, $microseconds) = unpack("LL", $_[0]);
+            return ($seconds, $microseconds);
+        }
     );
     
     sub _make_class_handler {
@@ -131,6 +137,15 @@ sub get_identifier {
     return $self->identifiers->{$id};
 }
 
+my @read_extra = (
+    0, 
+    0, 
+    0, 
+    0,
+    0,
+    4 
+);
+
 sub read_next {
     my $self = shift;
     
@@ -140,10 +155,12 @@ sub read_next {
     if ($read == 5) {
         # decode
         my ($cmd, $data) = unpack("Ca*", $buff);
-
         # This is a keyframe, return next instead
         return $self->read_next if $cmd == 0 && $self->skip_keyframes;
-
+        if ($read_extra[$cmd]) {
+            $self->data_fh->read($buff, $read_extra[$cmd]);
+            $data .= $buff;
+        }
         $self->handler->($cmd, $data, $self) if $self->handler;
         return ($cmd, $data);
     }
