@@ -81,20 +81,21 @@ static void record_OP_ENTERSUB(UNOP *);
 static uint16_t keyframe_counter = 0x400;
 static inline void check_and_insert_keyframe() {
     struct timeval tp;
-
     
     if (keyframe_counter & 0x400) {
         WRITE_KEYFRAME;
 
         if (gettimeofday(&tp, NULL) == 0) {
-            int seconds = (int) tp.tv_sec;
-            int usec = (int) tp.tv_usec;
+            struct {
+                int sec;
+                int usec;
+            } itp;
+                        
+            itp.sec = (int) tp.tv_sec;
+            itp.usec = (int) tp.tv_usec;
             *data_buffer = EVENT_TZ;
-            Copy(&seconds, data_buffer + 1, 1, int);
-            Copy(&usec, data_buffer + 5, 1, int);
-            data_buffer += 9;
-        }
-        else {
+            Copy(&itp, data_buffer + 1, 1, itp);
+            data_buffer += sizeof(itp) + 1;
         }
 
         keyframe_counter = 0;
