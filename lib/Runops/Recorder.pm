@@ -1,6 +1,6 @@
 package Runops::Recorder;
 
-use 5.010000;
+use 5.010;
 
 use strict;
 use warnings;
