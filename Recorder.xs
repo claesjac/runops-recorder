@@ -17,7 +17,8 @@ enum {
     EVENT_NEXT_STATEMENT,
     EVENT_DIE,
     EVENT_ENTER_SUB,
-    EVENT_TZ
+    EVENT_TZ,
+    EVENT_PADSV,
 };
 
 typedef enum Event Event;
@@ -68,6 +69,8 @@ static const char *prev_cop_file = NULL;
 
 static uint32_t curr_file_id = 0;
 static uint32_t next_identifier_id = 1;
+
+static uint32_t last_seen_identifier = 0;
 
 static bool is_initial_recorder = TRUE;
 
@@ -209,6 +212,12 @@ static void record_OP_DIE(LISTOP *op) {
     WRITE_EVENT(EVENT_DIE, empty, uint32_t);
 }
 
+static void handle_OP_PADSV(PADOP *op) {
+    CV *cv = find_runcv(NULL);
+    AV *names = *av_fetch(CvPADLIST(cv), 0, 0);
+    last_seen_identifier = get_identifier(SvPV_nolen(AvARRAY(names)[PL_op->op_targ]));
+}
+
 int runops_recorder(pTHX) {
     dVAR;
     OP *prev_op;    
@@ -221,10 +230,14 @@ int runops_recorder(pTHX) {
 
         op_type = PL_op->op_type;
         
-        switch(op_type) {
+        switch(op_type) {            
             case OP_DIE:
                 record_OP_DIE(cLISTOPx(PL_op));            
-            break;
+                break;
+            
+            case OP_PADSV:
+                handle_OP_PADSV(cPADOPx(PL_op));
+                break;            
         }
             
         /* Perform the op */

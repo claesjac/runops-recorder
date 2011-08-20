@@ -42,5 +42,5 @@ like ($reader->get_identifier(4), qr/strict\.pm$/);
 $reader->skip_until(4);
 ($cmd, $data) = $reader->read_next();
 is($cmd, 4);
-is($data, "\5\0\0\0");
+is($data, "\6\0\0\0");
 is($reader->get_identifier(3), "strict::import");

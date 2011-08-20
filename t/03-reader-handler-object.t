@@ -62,7 +62,7 @@ is(scalar keys %seen_file, 3),
 is($next_statements, 14);
 is($enter_subs, 3);
 is($seen_subs{3}, 'strict::import');
-is($seen_subs{7}, 'main::foo');
+is($seen_subs{9}, 'main::foo');
 is(scalar keys %seen_subs, 3),
 is($die, 1);
 ok(defined $last_sec_tz);
