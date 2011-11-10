@@ -1,6 +1,8 @@
 Revision history for Perl extension Runops::Recorder.
 
 0.08  ...
+    - Added -nostore option which prevents continous store to disk. This should be used
+      in combination with -die to only dump snapshots on exceptions
     - Buffer size is configureable via -bs option
     
 0.07  Wed Aug 17

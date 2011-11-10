@@ -6,8 +6,12 @@
 # change 'tests => 1' to 'tests => last_test_to_print';
 
 use Test::More tests => 9;
+use File::Path qw(remove_tree);
 
-BEGIN { use_ok('Runops::Recorder', qw(test-recording)) };
+BEGIN { 
+    remove_tree("test-recording");
+    use_ok('Runops::Recorder', qw(test-recording)) 
+};
 
 #########################
 

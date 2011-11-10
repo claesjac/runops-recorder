@@ -23,12 +23,17 @@ enum {
 
 typedef enum Event Event;
 
+#define CONTINOUS_STORE    0x1  /* Write actual writing of buffer to disk, should be disabled when DUMP_BUFFER_ON_DIE is on */
+#define DUMP_BUFFER_ON_DIE 0x2  /* Dump the buffer to disk when a OP_DIE is enountered */
+
 #define DATA_BUFFER_SIZE 65536
 #define DATA_BUFFER_MAX 65500
 
 static unsigned int data_buffer_size = DATA_BUFFER_SIZE;
 static unsigned int data_buffer_max = DATA_BUFFER_MAX;
 static unsigned int data_buffer_wrap;
+
+static U32 options;
 
 static char* data_buffer_base;
 static char* data_buffer;
@@ -37,7 +42,8 @@ static uint32_t data_buffer_len;
 #define WRITE_EVENT(x,y,z) \
     if (data_buffer - data_buffer_base > data_buffer_max) { \
         data_buffer_wrap = data_buffer - data_buffer_base; \
-        PerlIO_write(data_io, data_buffer_base, data_buffer - data_buffer_base); \
+        if (options & CONTINOUS_STORE) \
+            PerlIO_write(data_io, data_buffer_base, data_buffer - data_buffer_base); \
         data_buffer = data_buffer_base; \
         data_buffer_len = 0; \
     } \
@@ -53,7 +59,8 @@ const char* KEYFRAME_DATA = "\0\0\0\0\0";
 
 #define WRITE_KEYFRAME \
     if (data_buffer - data_buffer_base > data_buffer_max) { \
-        PerlIO_write(data_io, data_buffer_base, data_buffer - data_buffer_base); \
+        if (options & CONTINOUS_STORE) \
+            PerlIO_write(data_io, data_buffer_base, data_buffer - data_buffer_base); \
         data_buffer_wrap = data_buffer - data_buffer_base; \
         data_buffer = data_buffer_base; \
         data_buffer_len = 0; \
@@ -128,16 +135,19 @@ static const char* create_path(const char *filename) {
 
 void open_recording_files() {
     pid_t pid = getpid();
+    const char *fn;
     
     if (data_io != NULL) {
         PerlIO_close(data_io);
     }
     
-    const char *fn = create_path(is_initial_recorder == TRUE ? "main.data" : Perl_form("%d.data", pid));
-    data_io = PerlIO_open(fn, "w");
-    check_and_insert_keyframe();
-    Safefree(fn);
-
+    if (options & CONTINOUS_STORE) {
+        fn = create_path(is_initial_recorder == TRUE ? "main.data" : Perl_form("%d.data", pid));
+        data_io = PerlIO_open(fn, "w");
+        check_and_insert_keyframe();
+        Safefree(fn);
+    }
+    
     if (identifiers_io != NULL) {
         PerlIO_close(identifiers_io);
     }
@@ -149,7 +159,7 @@ void open_recording_files() {
 }
 
 void finish_recording() {
-    if (data_buffer - data_buffer_base > 0) {
+    if (data_buffer - data_buffer_base > 0 && options & CONTINOUS_STORE) {
         const char *fn = create_path(is_initial_recorder == TRUE ? "main.data" : Perl_form("%d.data", getpid()));
         data_io = PerlIO_open(fn, "a");
         Safefree(fn);
@@ -216,6 +226,10 @@ static void record_OP_ENTERSUB(UNOP *op) {
 static uint32_t empty = 0;
 static void record_OP_DIE(LISTOP *op) {
     WRITE_EVENT(EVENT_DIE, empty, uint32_t);
+    if (options & DUMP_BUFFER_ON_DIE) {
+        /* TODO: dump buffer */
+        
+    }
 }
 
 static void handle_OP_PADSV(PADOP *op) {
@@ -292,6 +306,12 @@ set_buffer_size(size)
         data_buffer_max  = size - 36;
         data_buffer_wrap = size;
         
+void
+set_options(new_opts)
+    U32 new_opts;
+    CODE:
+        options = new_opts;
+
 void
 init_recorder()
     CODE:

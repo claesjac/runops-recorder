@@ -41,6 +41,20 @@ sub import {
     my $size = _get_buffer_size(\@opts);
     set_buffer_size($size);
     
+    # Set options
+    my $opts = 0;
+
+    # This option turns on actual writing to disc for the continous store,
+    # it's ment to be disabled when -die is in effect
+    $opts |= 0x1;
+    $opts ^= 0x1 if grep { $_ eq "-nostore" } @opts;
+    
+    # This option controls wether the buffer should be dumped into a file 
+    # when an exception is thrown
+    $opts |= 0x2 if grep { $_ eq "-die"} @opts;
+
+    set_options($opts);
+    
     # Maybe disable optimizer
     $^P = 4 if grep { $_ eq "-noopt" } @opts;
     
@@ -99,6 +113,9 @@ It's possible to adjust the buffer size which is how much it'll keep in memory b
 it to disk. This is done by passing C<-bs=SIZE> where SIZE is a number followed by G/M/K/g/m/k 
 to denote the multiple. G, M and K are base-2 and g, m, k base-10. So 512K would be 524288 bytes. 
 If ommited a default of 64K is used.
+
+It is possible to prevent continous store to disk with C<-nostore>. This is ment to be used 
+with C<-die> that dumps the buffer to disk when an exception occurs.
 
 =head1 VIEWING THE RECORDING
 
