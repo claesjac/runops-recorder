@@ -289,8 +289,8 @@ set_buffer_size(size)
     unsigned int size;
     CODE:
         data_buffer_size = size;
-        data_buffer_size = size - 36;
-        data_buffer_wrap = 0;
+        data_buffer_max  = size - 36;
+        data_buffer_wrap = size;
         
 void
 init_recorder()
