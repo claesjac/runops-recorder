@@ -9,14 +9,17 @@ use Carp;
 use File::Path qw(make_path);
 use POSIX qw(strftime);
 
+use constant DEFAULT_BUFFER_SIZE => 64 * 1024;
+
 our $VERSION = '0.07';
+
 
 require XSLoader;
 XSLoader::load('Runops::Recorder', $VERSION);
 
 sub import {
     my ($pkg, @opts) = @_;
-
+    
     my $target_dir;
     $target_dir = $opts[0] if defined $opts[0] && $opts[0] !~ /^-/;
     
@@ -35,10 +38,30 @@ sub import {
     
     set_target_dir($target_dir);
 
+    my $size = _get_buffer_size(\@opts);
+    set_buffer_size($size);
+    
     # Maybe disable optimizer
     $^P = 4 if grep { $_ eq "-noopt" } @opts;
     
     init_recorder();
+}
+
+my %Size_multiplier = ( 
+    G => 1_073_741_824, M => 1_048_576, K => 1024,
+    g => 1_000_000_000, m => 1_000_000, k => 1000,
+);
+
+sub _get_buffer_size {
+    my $opts = shift;
+    
+    for my $opt (@$opts) {
+        if ($opt =~ /^-bs=(\d+(?:\.\d+)?)([GMK])/i) {
+            return $1 * $Size_multiplier{$2};
+        }
+    }
+    
+    return DEFAULT_BUFFER_SIZE;
 }
 
 1;
@@ -68,8 +91,14 @@ that can later be viewed using the rr-viewer tool.
 Simply use this module and it'll replace perl's standard runloop with its own. By 
 default a recording goes into a directory named rr-<date>-_<time>. If you want an 
 alternate name just pass it as the first argument to the use (eg -MRunops::Recorder=foo). 
+
 Sometimes perl will optimize away COPs and this may look confusing when viewing. If you 
 want to turn of the optimizer pass C<-noopt> when using this module.
+
+It's possible to adjust the buffer size which is how much it'll keep in memory before flushing 
+it to disk. This is done by passing C<-bs=SIZE> where SIZE is a number followed by G/M/K/g/m/k 
+to denote the multiple. G, M and K are base-2 and g, m, k base-10. So 512K would be 524288 bytes. 
+If ommited a default of 64K is used.
 
 =head1 VIEWING THE RECORDING
 

@@ -26,12 +26,17 @@ typedef enum Event Event;
 #define DATA_BUFFER_SIZE 65536
 #define DATA_BUFFER_MAX 65500
 
+static unsigned int data_buffer_size = DATA_BUFFER_SIZE;
+static unsigned int data_buffer_max = DATA_BUFFER_MAX;
+static unsigned int data_buffer_wrap;
+
 static char* data_buffer_base;
 static char* data_buffer;
 static uint32_t data_buffer_len;
 
 #define WRITE_EVENT(x,y,z) \
-    if (data_buffer - data_buffer_base > DATA_BUFFER_MAX) { \
+    if (data_buffer - data_buffer_base > data_buffer_max) { \
+        data_buffer_wrap = data_buffer - data_buffer_base; \
         PerlIO_write(data_io, data_buffer_base, data_buffer - data_buffer_base); \
         data_buffer = data_buffer_base; \
         data_buffer_len = 0; \
@@ -47,8 +52,9 @@ static uint32_t data_buffer_len;
 const char* KEYFRAME_DATA = "\0\0\0\0\0";
 
 #define WRITE_KEYFRAME \
-    if (data_buffer - data_buffer_base > DATA_BUFFER_MAX) { \
+    if (data_buffer - data_buffer_base > data_buffer_max) { \
         PerlIO_write(data_io, data_buffer_base, data_buffer - data_buffer_base); \
+        data_buffer_wrap = data_buffer - data_buffer_base; \
         data_buffer = data_buffer_base; \
         data_buffer_len = 0; \
     } \
@@ -259,7 +265,7 @@ int runops_recorder(pTHX) {
 
 void init_recorder() {
     seen_identifier = newHV();
-    Newxz(data_buffer_base, DATA_BUFFER_SIZE, char);
+    Newxz(data_buffer_base, data_buffer_size, char);
     data_buffer = data_buffer_base;
     open_recording_files();
     atexit(finish_recording);
@@ -278,6 +284,13 @@ set_target_dir(path)
         base_dir = SvPV(path, len);       
         base_dir_len = (size_t) len;
          
+void
+set_buffer_size(size)
+    unsigned int size;
+    CODE:
+        data_buffer_size = size;
+        data_buffer_size = size - 36;
+        data_buffer_wrap = 0;
         
 void
 init_recorder()
