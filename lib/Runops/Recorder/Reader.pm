@@ -30,12 +30,19 @@ use constant {
 };
 
 sub new {
-    my ($pkg, $dir, $opts) = @_;
+    my ($pkg, $path, $opts) = @_;
     
     $opts //= {};
     
-    open my $data_fh, "<", File::Spec->catfile($dir, "main.data") or die $!;
-    open my $identifiers_fh, "<", File::Spec->catfile($dir, "main.identifiers") or die $!;
+    my $file = "main.data";
+    if (-f $path) {
+        (undef, $path, $file) = File::Spec->splitpath($path);
+    }
+    
+    open my $data_fh, "<", File::Spec->catfile($path, $file) 
+        or die "Can't read $path/$file because of: $!";
+    open my $identifiers_fh, "<", File::Spec->catfile($path, "main.identifiers") 
+        or die "Can't read $path/main.identifiers because of: $!";
     
     my $handler;
     if ($opts->{handler}) {

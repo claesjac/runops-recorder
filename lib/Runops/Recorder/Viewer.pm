@@ -55,6 +55,8 @@ sub on_switch_file {
 
     }
     else {
+        $self->{num_lines} = -1;
+        $self->{all_lines} = [];
         $self->{current_file} = undef;
     }    
     
