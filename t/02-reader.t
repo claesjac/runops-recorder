@@ -4,7 +4,12 @@ use strict;
 use warnings;
 
 use Test::More qw(no_plan);
-BEGIN { use_ok("Runops::Recorder::Reader"); }
+use File::Path qw(remove_tree);
+
+BEGIN { 
+    remove_tree("test-recording");
+    use_ok("Runops::Recorder::Reader"); 
+}
 
 # Generate some data
 qx{$^X -Mblib -MRunops::Recorder=test-recording t/data/example.pl};
