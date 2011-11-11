@@ -19,6 +19,7 @@ enum {
     EVENT_ENTER_SUB,
     EVENT_TZ,
     EVENT_PADSV,
+    EVENT_LEAVE_SUB,
 };
 
 typedef enum Event Event;
@@ -81,6 +82,7 @@ static uint32_t curr_file_id = 0;
 static uint32_t next_identifier_id = 1;
 
 static uint32_t last_seen_identifier = 0;
+static uint32_t last_seen_entersub = 0;
 
 static bool is_initial_recorder = TRUE;
 
@@ -217,9 +219,18 @@ static void record_OP_ENTERSUB(UNOP *op) {
     if (cx != NULL && CxTYPE(cx) == CXt_SUB) {
         const GV *gv = CvGV(cx->blk_sub.cv);
         if (isGV(gv)) {
-            uint32_t identifier = get_identifier(Perl_form("%s::%s", HvNAME(GvSTASH(gv)), GvNAME(gv)));
-            WRITE_EVENT(EVENT_ENTER_SUB, identifier, uint32_t);
+            last_seen_entersub = get_identifier(Perl_form("%s::%s", HvNAME(GvSTASH(gv)), GvNAME(gv)));
+            WRITE_EVENT(EVENT_ENTER_SUB, last_seen_entersub, uint32_t);
         }
+        else {
+            last_seen_entersub = 0;
+        }
+    }
+}
+
+static void record_OP_LEAVESUB(UNOP *op) {
+    if (last_seen_entersub) {
+        WRITE_EVENT(EVENT_LEAVE_SUB, last_seen_entersub, uint32_t);
     }
 }
 
@@ -283,6 +294,11 @@ int runops_recorder(pTHX) {
             case OP_ENTERSUB:
                 record_OP_ENTERSUB(cUNOPx(PL_op));
             break;            
+            
+            case OP_LEAVESUB:
+                 OP_LEAVESUBLV:
+                 record_OP_LEAVESUB(cUNOPx(PL_op));
+            break;
         }
 
         PERL_ASYNC_CHECK();

@@ -77,6 +77,8 @@ sub new {
         3 => 'on_die',
         4 => 'on_enter_sub',
         5 => 'on_keyframe_timestamp',
+        6 => 'on_padsv',
+        7 => 'on_leavel_sub',
     );
     
     my %CMD_DATA_TRANSFORMER = (
@@ -88,7 +90,10 @@ sub new {
         5 => sub { 
             my ($seconds, $microseconds) = unpack("LL", $_[0]);
             return ($seconds, $microseconds);
-        }
+        },
+        6 => sub { my ($file_no) = unpack("L", $_[0]); return ($file_no, $_[1]->get_identifier($file_no)) },
+        7 => sub { my ($file_no) = unpack("L", $_[0]); return ($file_no, $_[1]->get_identifier($file_no)) },
+        
     );
     
     sub _make_class_handler {
