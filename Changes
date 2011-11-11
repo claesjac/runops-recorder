@@ -1,6 +1,7 @@
 Revision history for Perl extension Runops::Recorder.
 
 0.08  ...
+    - A keyframe is now followed with an switch_file event if we have a file
     - Added -nostore option which prevents continous store to disk. This should be used
       in combination with -die to only dump snapshots on exceptions
     - Buffer size is configureable via -bs option

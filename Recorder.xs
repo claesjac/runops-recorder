@@ -97,7 +97,10 @@ static inline void check_and_insert_keyframe() {
     
     if (keyframe_counter & 0x400) {
         WRITE_KEYFRAME;
-
+        if (curr_file_id) {
+            WRITE_EVENT(EVENT_SWITCH_FILE, curr_file_id, uint32_t);
+        }
+        
         if (gettimeofday(&tp, NULL) == 0) {
             struct {
                 int sec;
