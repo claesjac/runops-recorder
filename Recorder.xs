@@ -31,21 +31,19 @@ typedef enum Event Event;
 
 static unsigned int data_buffer_size = DATA_BUFFER_SIZE;
 static unsigned int data_buffer_max = DATA_BUFFER_MAX;
-static unsigned int data_buffer_wrap;
 
 static U32 options;
 
 static char* data_buffer_base;
 static char* data_buffer;
-static uint32_t data_buffer_len;
+static char* data_buffer_wrap;
 
 #define WRITE_EVENT(x,y,z) \
     if (data_buffer - data_buffer_base > data_buffer_max) { \
-        data_buffer_wrap = data_buffer - data_buffer_base; \
         if (options & CONTINOUS_STORE) \
             PerlIO_write(data_io, data_buffer_base, data_buffer - data_buffer_base); \
+        data_buffer_wrap = data_buffer; \
         data_buffer = data_buffer_base; \
-        data_buffer_len = 0; \
     } \
     *data_buffer = x; \
     Copy(&y, data_buffer + 1, 1, z); \
@@ -61,9 +59,8 @@ const char* KEYFRAME_DATA = "\0\0\0\0\0";
     if (data_buffer - data_buffer_base > data_buffer_max) { \
         if (options & CONTINOUS_STORE) \
             PerlIO_write(data_io, data_buffer_base, data_buffer - data_buffer_base); \
-        data_buffer_wrap = data_buffer - data_buffer_base; \
+        data_buffer_wrap = data_buffer; \
         data_buffer = data_buffer_base; \
-        data_buffer_len = 0; \
     } \
     Copy(KEYFRAME_DATA, data_buffer, 5, char); \
     data_buffer += 5; \
@@ -228,13 +225,28 @@ static void record_OP_DIE(LISTOP *op) {
     WRITE_EVENT(EVENT_DIE, empty, uint32_t);
     if (options & DUMP_BUFFER_ON_DIE) {
         /* TODO: dump buffer */
-        
+        struct timeval tp;
+        if (gettimeofday(&tp, NULL) == 0) {
+            unsigned int sec = tp.tv_sec;
+            unsigned int usec = tp.tv_usec;
+            const char *fn = create_path(Perl_form("died-%u.%d.data", sec, usec));
+            PerlIO *io = PerlIO_open(fn, "w");     
+            /* If we've wrapped we need to write the tail first */
+            if (data_buffer_wrap != NULL) {
+                PerlIO_write(io, data_buffer, data_buffer_wrap - data_buffer);
+            }       
+            PerlIO_write(io, data_buffer_base, data_buffer - data_buffer_base);
+            PerlIO_flush(io);
+            PerlIO_close(io);
+            Safefree(fn);
+
+        }
     }
 }
 
 static void handle_OP_PADSV(PADOP *op) {
     CV *cv = find_runcv(NULL);
-    AV *names = *av_fetch(CvPADLIST(cv), 0, 0);
+    AV *names = (AV *) *av_fetch(CvPADLIST(cv), 0, 0);
     last_seen_identifier = get_identifier(SvPV_nolen(AvARRAY(names)[PL_op->op_targ]));
 }
 
@@ -304,7 +316,7 @@ set_buffer_size(size)
     CODE:
         data_buffer_size = size;
         data_buffer_max  = size - 36;
-        data_buffer_wrap = size;
+        data_buffer_wrap = NULL;
         
 void
 set_options(new_opts)
