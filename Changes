@@ -1,5 +1,8 @@
 Revision history for Perl extension Runops::Recorder.
 
+0.09  ...
+    - Added missing dependencies to Makefile.PL
+    
 0.08  Sat Nov 12
     - Added an exception viewer which dumps where die was called
     - Timestamp events are now splitted in two - one with seconds and one with
