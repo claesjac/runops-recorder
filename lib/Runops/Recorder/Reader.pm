@@ -27,6 +27,9 @@ use constant {
     DIE             => 3,
     ENTER_SUB       => 4,
     KEYFRAME_TZ     => 5,
+    PADSV           => 6,
+    LEAVE_SUB       => 7,
+    KEYFRAME_TZ_U   => 8,
 };
 
 sub new {
@@ -79,6 +82,7 @@ sub new {
         5 => 'on_keyframe_timestamp',
         6 => 'on_padsv',
         7 => 'on_leave_sub',
+        8 => 'on_keyframe_timestamp_usec',
     );
     
     my %CMD_DATA_TRANSFORMER = (
@@ -87,12 +91,10 @@ sub new {
         2 => sub { my ($line_no) = unpack("L", $_[0]); return ($line_no) },
         3 => sub {},
         4 => sub { my ($identifier_no) = unpack("L", $_[0]); return ($identifier_no, $_[1]->get_identifier($identifier_no)) },
-        5 => sub { 
-            my ($seconds, $microseconds) = unpack("LL", $_[0]);
-            return ($seconds, $microseconds);
-        },
+        5 => sub { my ($sec) = unpack("L", $_[0]); return ($sec); },
         6 => sub { my ($identifier_no) = unpack("L", $_[0]); return ($identifier_no, $_[1]->get_identifier($identifier_no)) },
         7 => sub { my ($identifier_no) = unpack("L", $_[0]); return ($identifier_no, $_[1]->get_identifier($identifier_no)) },
+        8 => sub { my ($usec) = unpack("L", $_[0]); return ($usec); },
     );
     
     sub _make_class_handler {
@@ -154,7 +156,9 @@ my @read_extra = (
     0, 
     0,
     0,
-    4 
+    0,
+    0,
+    0, 
 );
 
 sub read_next {

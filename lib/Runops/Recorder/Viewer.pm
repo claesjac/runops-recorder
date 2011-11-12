@@ -64,10 +64,16 @@ sub on_switch_file {
 }
 
 sub on_keyframe_timestamp {
-    my ($self, $tz_sec, $tz_usec) = @_;
+    my ($self, $tz_sec) = @_;
     
     my ($sec, $min, $hour, $day, $month, $year) = localtime($tz_sec);
-    $self->{last_tz} = sprintf("%04d-%02d-%02d %02d:%02d:%02d.%08d", $year + 1900, $month + 1, $day, $hour, $min, $sec, $tz_usec);
+    $self->{last_tz} = sprintf("%04d-%02d-%02d %02d:%02d:%02d", $year + 1900, $month + 1, $day, $hour, $min, $sec);
+}
+
+sub on_keyframe_timestamp_usec {
+    my ($self, $tz_usec) = @_;
+    
+    $self->{last_tz} .= sprintf ".%6d", $tz_usec;
 }
 
 sub _show_current_file {

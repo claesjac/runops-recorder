@@ -24,7 +24,11 @@ is_deeply ([$reader->decode($cmd, $data)], []);
 
 ($cmd, $data) = $reader->read_next();
 is($cmd, 5);
-is(length $data, 8);
+is(length $data, 4);
+
+($cmd, $data) = $reader->read_next();
+is($cmd, 8);
+is(length $data, 4);
 
 ($cmd, $data) = $reader->read_next();
 is($cmd, 1);

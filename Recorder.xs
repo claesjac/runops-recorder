@@ -20,6 +20,7 @@ enum {
     EVENT_TZ,
     EVENT_PADSV,
     EVENT_LEAVE_SUB,
+    EVENT_TZ_USEC,
 };
 
 typedef enum Event Event;
@@ -104,16 +105,8 @@ static inline void check_and_insert_keyframe() {
         }
         
         if (gettimeofday(&tp, NULL) == 0) {
-            struct {
-                int sec;
-                int usec;
-            } itp;
-                        
-            itp.sec = (int) tp.tv_sec;
-            itp.usec = (int) tp.tv_usec;
-            *data_buffer = EVENT_TZ;
-            Copy(&itp, data_buffer + 1, 1, itp);
-            data_buffer += sizeof(itp) + 1;
+            WRITE_EVENT(EVENT_TZ, tp.tv_sec, uint32_t);
+            WRITE_EVENT(EVENT_TZ_USEC, tp.tv_usec, uint32_t);
         }
 
         keyframe_counter = 0;
