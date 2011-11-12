@@ -240,8 +240,10 @@ static void record_OP_DIE(LISTOP *op) {
             PerlIO *io = PerlIO_open(fn, "w");     
             /* If we've wrapped we need to write the tail first */
             if (data_buffer_wrap != NULL) {
+                PerlIO_write(io, KEYFRAME_DATA, 5);
                 PerlIO_write(io, data_buffer, data_buffer_wrap - data_buffer);
             }       
+            PerlIO_write(io, KEYFRAME_DATA, 5);
             PerlIO_write(io, data_buffer_base, data_buffer - data_buffer_base);
             PerlIO_flush(io);
             PerlIO_close(io);

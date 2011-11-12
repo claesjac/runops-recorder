@@ -1,6 +1,9 @@
 Revision history for Perl extension Runops::Recorder.
 
 0.08  ...
+    - Added an exception viewer which dumps where die was called
+    - Timestamp events are now splitted in two - one with seconds and one with
+      miliseconds
     - A keyframe is now followed with an switch_file event if we have a file
     - Added -nostore option which prevents continous store to disk. This should be used
       in combination with -die to only dump snapshots on exceptions
