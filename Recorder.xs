@@ -91,12 +91,13 @@ int runops_recorder(pTHX);
 static const char *create_path(const char *);
 static void open_recording_files();
 static uint32_t get_identifier(const char *);
+static void record_tz();
 static void record_COP(COP *);
 static void record_OP_ENTERSUB(UNOP *);
 
 static uint16_t keyframe_counter = 0x400;
+
 static inline void check_and_insert_keyframe() {
-    struct timeval tp;
     
     if (keyframe_counter & 0x400) {
         WRITE_KEYFRAME;
@@ -104,16 +105,21 @@ static inline void check_and_insert_keyframe() {
             WRITE_EVENT(EVENT_SWITCH_FILE, curr_file_id, uint32_t);
         }
         
-        if (gettimeofday(&tp, NULL) == 0) {
-            WRITE_EVENT(EVENT_TZ, tp.tv_sec, uint32_t);
-            WRITE_EVENT(EVENT_TZ_USEC, tp.tv_usec, uint32_t);
-        }
-
+        record_tz();
+        
         keyframe_counter = 0;
     }
 
     keyframe_counter++;
 
+}
+
+static void record_tz() {
+    struct timeval tp;
+    if (gettimeofday(&tp, NULL) == 0) {
+        WRITE_EVENT(EVENT_TZ, tp.tv_sec, uint32_t);
+        WRITE_EVENT(EVENT_TZ_USEC, tp.tv_usec, uint32_t);
+    }    
 }
 
 static const char* create_path(const char *filename) {
@@ -229,6 +235,7 @@ static void record_OP_LEAVESUB(UNOP *op) {
 
 static uint32_t empty = 0;
 static void record_OP_DIE(LISTOP *op) {
+    record_tz();
     WRITE_EVENT(EVENT_DIE, empty, uint32_t);
     if (options & DUMP_BUFFER_ON_DIE) {
         /* TODO: dump buffer */

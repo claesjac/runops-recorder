@@ -10,5 +10,5 @@ WriteMakefile(
     }, # e.g., Module::Name => 1.1
     ABSTRACT_FROM   => 'lib/Runops/Recorder.pm', # retrieve abstract from module
     AUTHOR          => 'Claes Jakobsson <claesjac@cpan.org>',
-    EXE_FILES       => [qw(bin/rr-viewer bin/rr-diff)],
+    EXE_FILES       => [qw(bin/rr-viewer bin/rr-diff bin/rr-exceptions)],
 );
