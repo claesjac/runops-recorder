@@ -70,8 +70,8 @@ sub _get_buffer_size {
     my $opts = shift;
     
     for my $opt (@$opts) {
-        if ($opt =~ /^-bs=(\d+(?:\.\d+)?)([GMK])/i) {
-            return $1 * $Size_multiplier{$2};
+        if ($opt =~ /^-bs=(\d+(?:\.\d+)?)([GMK])?/i) {
+            return $2 ? $1 * $Size_multiplier{$2} : int $1;    
         }
     }
     
@@ -110,9 +110,9 @@ Sometimes perl will optimize away COPs and this may look confusing when viewing.
 want to turn of the optimizer pass C<-noopt> when using this module.
 
 It's possible to adjust the buffer size which is how much it'll keep in memory before flushing 
-it to disk. This is done by passing C<-bs=SIZE> where SIZE is a number followed by G/M/K/g/m/k 
+it to disk. This is done by passing C<-bs=SIZE> where SIZE is a number followed by an optional G/M/K/g/m/k 
 to denote the multiple. G, M and K are base-2 and g, m, k base-10. So 512K would be 524288 bytes. 
-If ommited a default of 64K is used.
+If ommited a default of 64K is used. The minimum size is 128 bytes.
 
 It is possible to prevent continous store to disk with C<-nostore>. This is ment to be used 
 with C<-die> that dumps the buffer to disk when an exception occurs.

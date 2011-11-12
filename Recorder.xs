@@ -335,8 +335,11 @@ void
 set_buffer_size(size)
     unsigned int size;
     CODE:
+        if (size < 128) {
+            size = 128;
+        }
         data_buffer_size = size;
-        data_buffer_max  = size - 36;
+        data_buffer_max  = size - 10;
         data_buffer_wrap = NULL;
         
 void
