@@ -11,8 +11,7 @@ use POSIX qw(strftime);
 
 use constant DEFAULT_BUFFER_SIZE => 64 * 1024;
 
-our $VERSION = '0.07';
-
+our $VERSION = '0.08';
 
 require XSLoader;
 XSLoader::load('Runops::Recorder', $VERSION);
