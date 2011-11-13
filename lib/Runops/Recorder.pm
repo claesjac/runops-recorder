@@ -77,6 +77,12 @@ sub _get_buffer_size {
     return DEFAULT_BUFFER_SIZE;
 }
 
+sub dump {
+    my $file = shift;
+    $file .= '.data' unless $file =~ /\.data$/;
+    _dump($file);
+}
+
 1;
 __END__
 =head1 NAME
@@ -128,6 +134,17 @@ should be the sleep time until stepping. And yes, it uses Time::HiRes so you can
 give it fracitonal seconds.
 
 If you set RR_SKIP_INC the autorun will not show @INC files as the 'a' option does.
+
+=head1 FUNCTIONS
+
+=over 4
+
+=item dump ( $name )
+
+Dumps the buffer as I<$name> in the recording. Adds .dump to the $name if 
+ommited.
+
+=back
 
 =head1 TODO
 

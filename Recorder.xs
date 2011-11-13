@@ -89,6 +89,7 @@ static bool is_initial_recorder = TRUE;
 
 int runops_recorder(pTHX);
 static const char *create_path(const char *);
+static void dump_buffer(const char *);
 static void open_recording_files();
 static uint32_t get_identifier(const char *);
 static void record_tz();
@@ -233,6 +234,23 @@ static void record_OP_LEAVESUB(UNOP *op) {
     }
 }
 
+static void dump_buffer(const char *name) {
+    const char *fn = create_path(name);
+    
+    PerlIO *io = PerlIO_open(fn, "w");     
+    /* If we've wrapped we need to write the tail first */
+    if (data_buffer_wrap != NULL) {
+        PerlIO_write(io, KEYFRAME_DATA, 5);
+        PerlIO_write(io, data_buffer, data_buffer_wrap - data_buffer);
+    }       
+    PerlIO_write(io, KEYFRAME_DATA, 5);
+    PerlIO_write(io, data_buffer_base, data_buffer - data_buffer_base);
+    PerlIO_flush(io);
+    PerlIO_close(io);    
+    
+    Safefree(fn);
+}
+
 static uint32_t empty = 0;
 static void record_OP_DIE(LISTOP *op) {
     record_tz();
@@ -243,18 +261,7 @@ static void record_OP_DIE(LISTOP *op) {
         if (gettimeofday(&tp, NULL) == 0) {
             unsigned int sec = tp.tv_sec;
             unsigned int usec = tp.tv_usec;
-            const char *fn = create_path(Perl_form("died-%u.%d.data", sec, usec));
-            PerlIO *io = PerlIO_open(fn, "w");     
-            /* If we've wrapped we need to write the tail first */
-            if (data_buffer_wrap != NULL) {
-                PerlIO_write(io, KEYFRAME_DATA, 5);
-                PerlIO_write(io, data_buffer, data_buffer_wrap - data_buffer);
-            }       
-            PerlIO_write(io, KEYFRAME_DATA, 5);
-            PerlIO_write(io, data_buffer_base, data_buffer - data_buffer_base);
-            PerlIO_flush(io);
-            PerlIO_close(io);
-            Safefree(fn);
+            dump_buffer(Perl_form("died-%u.%d.data", sec, usec));
 
         }
     }
@@ -352,3 +359,9 @@ void
 init_recorder()
     CODE:
         init_recorder();
+        
+void
+_dump(name)
+    const char *name;
+    CODE:
+        dump_buffer(name);
