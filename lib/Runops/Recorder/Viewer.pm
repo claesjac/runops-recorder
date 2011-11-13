@@ -76,6 +76,11 @@ sub on_keyframe_timestamp_usec {
     $self->{last_tz} .= sprintf ".%6d", $tz_usec;
 }
 
+sub _formatted_last_tz {
+    my $self = shift;
+    return defined $self->{last_tz} ? "At: " . $self->{last_tz} : "";
+}
+
 sub _show_current_file {
     my $self = shift;
     
@@ -89,7 +94,7 @@ sub _show_current_file {
         $screen->bold->puts("Can't find file\n")->normal();                
     }
 
-    $screen->at(1, 0)->puts("At: " . $self->{last_tz});
+    $screen->at(1, 0)->puts($self->_formatted_last_tz);
 }
 
 {
@@ -123,7 +128,7 @@ sub _show_current_file {
         # Adjust to fill screen
         $to += ($screen->rows - 4 - ($to - $from)) if ($to - $from) < $screen->rows - 4;
 
-        $screen->at(1, 0)->puts("At: " . $self->{last_tz});    
+        $screen->at(1, 0)->puts($self->_formatted_last_tz);
 
         $screen->at(2, 0);
         $screen->clreos();
