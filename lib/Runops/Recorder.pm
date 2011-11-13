@@ -77,12 +77,6 @@ sub _get_buffer_size {
     return DEFAULT_BUFFER_SIZE;
 }
 
-sub dump {
-    my $file = shift;
-    $file .= '.data' unless $file =~ /\.data$/;
-    _dump($file);
-}
-
 1;
 __END__
 =head1 NAME

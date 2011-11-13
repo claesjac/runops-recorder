@@ -361,7 +361,13 @@ init_recorder()
         init_recorder();
         
 void
-_dump(name)
+dump(name)
     const char *name;
     CODE:
-        dump_buffer(name);
+        if (strncmp(name + strlen(name) - 5, ".data", 5) == 0) {
+            dump_buffer(name);
+        }
+        else {
+            dump_buffer(Perl_form("%s.data", name));
+        }
+        
