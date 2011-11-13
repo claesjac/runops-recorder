@@ -51,6 +51,11 @@ VIEWING THE RECORDING
     If you set RR_SKIP_INC the autorun will not show @INC files as the 'a'
     option does.
 
+FUNCTIONS
+    dump ( $name )
+        Dumps the buffer as *$name* in the recording. Adds .dump to the
+        $name if ommited.
+
 TODO
     Record more things such as changes to variables, opened file descriptors
     etc.
