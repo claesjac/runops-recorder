@@ -18,4 +18,5 @@ t/03-reader-handler-object.t
 t/04-reader-handler-callbacks.t
 t/05-runops-nostore.t
 t/06-runops-die.t
+t/07-dump.t
 t/data/example.pl
