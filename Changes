@@ -1,6 +1,8 @@
 Revision history for Perl extension Runops::Recorder.
 
-0.09  ...
+0.09  Sun Nov 13
+    - Fixed a warning in the viewer if we haven't seen a TZ yet
+    - Added dump() function to dump the buffer to disk
     - Added missing dependencies to Makefile.PL
     
 0.08  Sat Nov 12
