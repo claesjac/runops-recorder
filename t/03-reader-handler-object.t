@@ -61,13 +61,13 @@ my $reader = Runops::Recorder::Reader->new("test-recording", { handler => __PACK
 $reader->read_all;
 
 is($keyframes, 1);
-is($switched_files, 5);
+is($switched_files, $] >= 5.011 ? 5 : 7);
 is($seen_file{2}, 't/data/example.pl');
-is(scalar keys %seen_file, 3),
-is($next_statements, 14);
+is(scalar keys %seen_file, $] >= 5.011 ? 3 : 5);
+ok($next_statements >= 14);
 is($enter_subs, 3);
 is($seen_subs{3}, 'strict::import');
-is($seen_subs{9}, 'main::foo');
+is($seen_subs{$] >= 5.013 ? 9 : 13}, 'main::foo');
 is(scalar keys %seen_subs, 3),
 is($die, 1);
 ok(defined $last_sec_tz);

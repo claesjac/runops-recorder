@@ -38,7 +38,7 @@ $reader->read_all;
 
 is($keyframes, 1);
 is($keyframe_timestamps, 2);
-is($switched_files, 5);
+is($switched_files, $] >= 5.011 ? 5 : 7);
 is($enter_subs, 3);
-is($next_statements, 14);
+ok($next_statements >= 14);
 is($die, 1);

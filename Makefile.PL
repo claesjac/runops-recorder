@@ -1,6 +1,6 @@
 use ExtUtils::MakeMaker;
 
-use 5.010;
+use 5.008;
 
 WriteMakefile(
     NAME            => 'Runops::Recorder',

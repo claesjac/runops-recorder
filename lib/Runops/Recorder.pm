@@ -1,7 +1,5 @@
 package Runops::Recorder;
 
-use 5.010;
-
 use strict;
 use warnings;
 
@@ -24,14 +22,16 @@ sub import {
     
     unless ($target_dir) {
         unless ($ENV{RR_TARGET_DIR}) {
-            $target_dir //= strftime("rr-%Y%m%d_%H%M%S", localtime(time));
+            $target_dir = defined $target_dir ? 
+                $target_dir :
+                strftime("rr-%Y%m%d_%H%M%S", localtime(time));
         }
         else {
             $target_dir = $ENV{RR_TARGET_DIR};
         }
     }
     
-    unless (-e -d $target_dir) {
+    unless (-e $target_dir && -d $target_dir) {
         make_path $target_dir;
     }
     

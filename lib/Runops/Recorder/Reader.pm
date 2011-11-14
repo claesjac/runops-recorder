@@ -35,7 +35,7 @@ use constant {
 sub new {
     my ($pkg, $path, $opts) = @_;
     
-    $opts //= {};
+    $opts = {} unless ref $opts eq 'HASH';
     
     my $file = "main.data";
     if (-f $path) {
@@ -56,7 +56,7 @@ sub new {
     }
     
     # This means that read_next will ignore keyframe commands
-    my $skip_keyframes = $opts->{skip_keyframes} // 1;
+    my $skip_keyframes = defined $opts->{skip_keyframes} ? $opts->{skip_keyframes} : 1;
     
     my $self = bless { 
         data_fh => $data_fh, 
@@ -136,7 +136,7 @@ sub read_identifiers {
     my $identifiers_fh = $self->identifiers_fh;
     
     # Reset that we're not at EOF
-    $identifiers_fh->seek(0, SEEK_CUR);
+    seek $identifiers_fh, 0, SEEK_CUR;
     while (<$identifiers_fh>) {
         chomp;
         my ($id, $name) = split /:/, $_, 2;
@@ -166,7 +166,7 @@ sub read_next {
     
     # Assume the file is synced
     my $buff;
-    my $read = $self->data_fh->read($buff, 5);
+    my $read = read $self->data_fh, $buff, 5;
     if ($read == 5) {
         # decode
         my ($cmd, $data) = unpack("Ca*", $buff);
@@ -180,7 +180,7 @@ sub read_next {
         return ($cmd, $data);
     }
     elsif ($read) {
-        $self->data_fh->seek(-$read, SEEK_CUR);
+        seek $self->data_fh, -$read, SEEK_CUR;
     }
     
     return;
@@ -203,7 +203,7 @@ sub skip_until {
     }
     until ($cmd == $target_cmd);
 
-    $self->data_fh->seek(-5, SEEK_CUR);
+    seek $self->data_fh, -5, SEEK_CUR;
 }
 
 sub find_next_keyframe {
@@ -215,13 +215,13 @@ sub find_next_keyframe {
 
     # TODO: also handle tail mode
     while ($read_keyframe < 5) {
-        my $next = $data_fh->getc;
+        my $next = getc $data_fh;
         last unless defined $next;
         $read_keyframe = 0, next if ord($next) != 0;
         $read_keyframe++;        
     }
     
-    $data_fh->seek(-5, SEEK_CUR);
+    seek $data_fh, -5, SEEK_CUR;
 
     1;
 }

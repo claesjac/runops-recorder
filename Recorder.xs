@@ -4,7 +4,12 @@
 
 #include "ppport.h"
 
+
 #include <sys/time.h>
+
+#ifndef Perl_caller_cx
+#include "pre-5.14-compat.h"
+#endif
 
 /* Doesn't seem to exist before 5.14 */
 #ifndef OP_CLASS
@@ -214,8 +219,9 @@ static void record_COP(COP *cop) {
     check_and_insert_keyframe();
 }
 
+
 static void record_OP_ENTERSUB(UNOP *op) {
-    const PERL_CONTEXT *cx = caller_cx(0, NULL);
+    const PERL_CONTEXT *cx = Perl_caller_cx(0, NULL);
     if (cx != NULL && CxTYPE(cx) == CXt_SUB) {
         const GV *gv = CvGV(cx->blk_sub.cv);
         if (isGV(gv)) {
@@ -276,7 +282,7 @@ static void handle_OP_PADSV(PADOP *op) {
 int runops_recorder(pTHX) {
     dVAR;
     OP *prev_op;    
-    PERL_BITFIELD16 op_type;
+    uint32_t op_type;
     
     while (PL_op) {
         if (OP_CLASS(PL_op) == OA_COP) {
