@@ -30,8 +30,9 @@ enum {
 
 typedef enum Event Event;
 
-#define CONTINOUS_STORE    0x1  /* Write actual writing of buffer to disk, should be disabled when DUMP_BUFFER_ON_DIE is on */
-#define DUMP_BUFFER_ON_DIE 0x2  /* Dump the buffer to disk when a OP_DIE is enountered */
+#define CONTINOUS_STORE         0x1  /* Write actual writing of buffer to disk, should be disabled when DUMP_BUFFER_ON_DIE is on */
+#define DUMP_BUFFER_ON_DIE      0x2  /* Dump the buffer to disk when a OP_DIE is enountered */
+#define IGNORE_DIE_DUMP_IN_EVAL 0x4  /* Ignore dumping dies when in eval */
 
 #define DATA_BUFFER_SIZE 65536
 #define DATA_BUFFER_MAX 65500
@@ -261,14 +262,12 @@ static uint32_t empty = 0;
 static void record_OP_DIE(LISTOP *op) {
     record_tz();
     WRITE_EVENT(EVENT_DIE, empty, uint32_t);
-    if (options & DUMP_BUFFER_ON_DIE) {
-        /* TODO: dump buffer */
+    if (options & DUMP_BUFFER_ON_DIE && !(options & IGNORE_DIE_DUMP_IN_EVAL)) {
         struct timeval tp;
         if (gettimeofday(&tp, NULL) == 0) {
             unsigned int sec = tp.tv_sec;
             unsigned int usec = tp.tv_usec;
             dump_buffer(Perl_form("died-%u.%d.data", sec, usec));
-
         }
     }
 }

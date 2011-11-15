@@ -51,7 +51,8 @@ sub import {
     # This option controls wether the buffer should be dumped into a file 
     # when an exception is thrown
     $opts |= 0x2 if grep { $_ eq "-die"} @opts;
-
+    $opts |= 0x4 if grep { $_ eq "-ignoreeval" } @opts;
+    
     set_options($opts);
     
     # Maybe disable optimizer

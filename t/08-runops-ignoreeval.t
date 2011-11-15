@@ -10,7 +10,7 @@ use File::Path qw(remove_tree);
 
 BEGIN { 
     remove_tree("test-recording");
-    use_ok('Runops::Recorder', qw(test-recording -nostore -die -bs=1K)) 
+    use_ok('Runops::Recorder', qw(test-recording -nostore -die -bs=1K -ignoreeval)) 
 };
 
 #########################
@@ -34,4 +34,4 @@ eval {
 };
 
 ok(!-e "test-recording/main.data");
-like(scalar glob("test-recording/died*"), qr/died-\d+\.\d+/);
+ok(!defined scalar glob("test-recording/died*"));

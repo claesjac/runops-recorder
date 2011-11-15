@@ -1,6 +1,7 @@
 Revision history for Perl extension Runops::Recorder.
 
 0.10  ...
+    - Added -ignoreeval which prevents -die to dump buffer when in eval
     - Fixed actual compat with 5.10 and 5.12 claimed.
     - Added at least 5.8.9 compat as requested by Hugo van der Sanden (hopefully
       this means 5.8.8 too)
